@@ -20,16 +20,11 @@ app.get('/webhooks', express.json(), (req, res) => {
 })
 
 app.post('/webhooks', express.json(), (req, res) => {
-  console.log('incoming webhook')
-  console.log(req.body)
-
   const changes = req.body.entry[0].changes
   if (!changes) {
     res.sendStatus(200)
     return
   }
-
-  console.log(changes[0])
 
   const message = changes[0].value.messages[0]
   if (!message) {
@@ -37,16 +32,17 @@ app.post('/webhooks', express.json(), (req, res) => {
     return
   }
 
-  console.log(message)
+  if (message.from !== process.env.IDANS_NUMBER) {
+    res.sendStatus(200)
+    return
+  }
 
-  res.sendStatus(200)
-  // const message = req.body.data.body
-  // const conversation = new Whatsapp(req.body.data.from)
-  // sophia.ask(message, { history: [], output: conversation.send, error: conversation.send }).then(() => {
-  //   res.sendStatus(200)
-  // }).catch(() => {
-  //   res.sendStatus(500)
-  // })
+  const conversation = new Whatsapp(message.from)
+  sophia.ask(message.text.body, { history: [], output: conversation.send, error: conversation.send }).then(() => {
+    res.sendStatus(200)
+  }).catch(() => {
+    res.sendStatus(500)
+  })
 })
 
 app.listen(PORT, () => {

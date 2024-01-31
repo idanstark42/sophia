@@ -6,8 +6,8 @@ class Whatsapp {
     this.recepient = recepient
   }
 
-  send (message) {
-    fetch({
+  async send (message) {
+    return await fetch({
       url: WHATSAPP_API_URL,
       method: 'POST',
       withCredentials: true,
