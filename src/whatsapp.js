@@ -7,8 +7,7 @@ class Whatsapp {
   }
 
   async send (message) {
-    return await fetch({
-      url: WHATSAPP_API_URL,
+    return await fetch(WHATSAPP_API_URL, {
       method: 'POST',
       withCredentials: true,
       credentials: 'include',
