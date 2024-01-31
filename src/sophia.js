@@ -20,7 +20,7 @@ const ask = async (input, { history, output, error }) => {
   try {
     const response = await new OpenAI().beta.chat.completions
       .runTools({ model, messages, tools })
-      .on('message', message => output(message))
+      .on('message', message => console.log(message))
       .finalContent()
     output(response)
   } catch (e) {
