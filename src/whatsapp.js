@@ -1,42 +1,31 @@
-const requset = require('request-promise')
-
 const WHATSAPP_API_URL = process.env.WHATSAPP_API_URL
 const WHATSAPP_API_TOKEN = process.env.WHATSAPP_API_TOKEN
 
-const send = (convId, message) => {
-  return requset(options(convId, message))
-    .then(function (response) {
-      console.log(response);
+class Whatsapp {
+  constructor(recepient) {
+    this.recepient = recepient
+  }
+
+  send (message) {
+    fetch({
+      url: WHATSAPP_API_URL,
+      method: 'POST',
+      withCredentials: true,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${WHATSAPP_API_TOKEN}`
+      },
+      body: {
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: this.recepient,
+        type: "text",
+        text: {
+          preview_url: false,
+          body: message
+        }
+      }
     })
-    .catch(function (err) {
-      console.error(err);
-    });
-}
-
-const error = (convId, error) => {
-  return send(convId, `Sorry, I'm having trouble understanding you. Please try again.`)
-    .then(() => send(convId, error))
-}
-
-const options = (convId, message) => ({
-  method: 'POST',
-  url: `${WHATSAPP_API_URL}?token=${WHATSAPP_API_TOKEN}`,
-  headers: { accept: 'application/json', 'content-type': 'application/json' },
-  body: { typing_time: 10, to: convId, body: message },
-  json: true
-})
-
-export default class Whatsapp {
-  constructor(convId) {
-    this.convId = convId
   }
-
-  send(message) {
-    return send(this.convId, message)
-  }
-
-  error(error) {
-    return error(this.convId, error)
-  }
-
 }

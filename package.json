@@ -7,6 +7,9 @@
   "author": "Idan Stark <idanstark42@gmail.com>",
   "license": "None",
   "private": false,
+  "scripts": {
+    "start": "node src/index.js"
+  },
   "dependencies": {
     "dotenv": "^16.4.1",
     "express": "^4.18.2",
