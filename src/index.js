@@ -22,6 +22,13 @@ app.get('/webhooks', express.json(), (req, res) => {
 app.post('/webhooks', express.json(), (req, res) => {
   console.log('incoming webhook')
   console.log(req.body)
+
+  const changes = req.body.entry[0].changes
+  if (changes) {
+    console.log('change')
+    console.log(changes[0])
+  }
+
   res.sendStatus(200)
   // const message = req.body.data.body
   // const conversation = new Whatsapp(req.body.data.from)
