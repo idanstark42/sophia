@@ -38,7 +38,7 @@ app.post('/webhooks', express.json(), (req, res) => {
   }
 
   const conversation = new Whatsapp(message.from)
-  sophia.ask(message.text.body, { history: [], output: conversation.send, error: conversation.send }).then(() => {
+  sophia.ask(message.text.body, { history: [], output: conversation.send, error: console.log }).then(() => {
     res.sendStatus(200)
   }).catch(() => {
     res.sendStatus(500)
