@@ -29,3 +29,5 @@ class Whatsapp {
     })
   }
 }
+
+module.exports = Whatsapp
