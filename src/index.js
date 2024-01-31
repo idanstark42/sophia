@@ -8,14 +8,28 @@ const PORT = process.env.PORT || 3000
 
 const app = express()
 
-app.get('/message', express.json(), (req, res) => {
-  const message = req.body.data.body
-  const conversation = new Whatsapp(req.body.data.from)
-  sophia.ask(message, { history: [], output: conversation.send, error: conversation.send }).then(() => {
-    res.sendStatus(200)
-  }).catch(() => {
-    res.sendStatus(500)
-  })
+app.get('/webhooks', express.json(), (req, res) => {
+  const mode = req.query['hub.mode']
+  const verify_token = req.query['hub.verify_token']
+  const challenge = req.query['hub.challenge']
+  if (mode !== 'subscribe' || verify_token !== process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN) {
+    res.sendStatus(403)
+    return
+  }
+  res.send(challenge)
+})
+
+app.post('/webhooks', express.json(), (req, res) => {
+  console.log('incoming webhook')
+  console.log(req.body)
+  res.sendStatus(200)
+  // const message = req.body.data.body
+  // const conversation = new Whatsapp(req.body.data.from)
+  // sophia.ask(message, { history: [], output: conversation.send, error: conversation.send }).then(() => {
+  //   res.sendStatus(200)
+  // }).catch(() => {
+  //   res.sendStatus(500)
+  // })
 })
 
 app.listen(PORT, () => {
