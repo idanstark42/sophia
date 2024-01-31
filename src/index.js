@@ -29,6 +29,8 @@ app.post('/webhooks', express.json(), (req, res) => {
     return
   }
 
+  console.log(changes[0])
+
   const message = changes[0].value.messages[0]
   if (!message) {
     res.sendStatus(200)
