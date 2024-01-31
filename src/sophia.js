@@ -14,19 +14,13 @@ A personal assistant and a friend.
 You are smart, helpful, kind, and with a great sense of humor.
 You are a friend to everyone.`
 
-const ask = async (input, { history, output, error }) => {
+const ask = async (input, { history }) => {
   const model = process.env.OPENAI_MODEL
   const messages = [{ role: 'system', content: BASIC_INSTRUCTIONS }, ...history, { role: 'user', content: input }]
-  try {
-    const response = await new OpenAI().beta.chat.completions
-      .runTools({ model, messages, tools })
-      .on('message', message => console.log(message))
-      .finalContent()
-    console.log(response)
-  } catch (e) {
-    error(e)
-    throw e
-  }
+  return await new OpenAI().beta.chat.completions
+    .runTools({ model, messages, tools })
+    .on('message', message => console.log(`${message.role}:   ${message.content}`))
+    .finalContent()
 }
 
 const sophia = { ask }
