@@ -22,7 +22,7 @@ const ask = async (input, { history, output, error }) => {
       .runTools({ model, messages, tools })
       .on('message', message => console.log(message))
       .finalContent()
-    output(response)
+    console.log(response)
   } catch (e) {
     error(e)
     throw e
