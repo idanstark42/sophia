@@ -24,10 +24,18 @@ app.post('/webhooks', express.json(), (req, res) => {
   console.log(req.body)
 
   const changes = req.body.entry[0].changes
-  if (changes) {
-    console.log('change')
-    console.log(changes[0])
+  if (!changes) {
+    res.sendStatus(200)
+    return
   }
+
+  const message = changes[0].value.messages[0]
+  if (!message) {
+    res.sendStatus(200)
+    return
+  }
+
+  console.log(message)
 
   res.sendStatus(200)
   // const message = req.body.data.body
