@@ -48,6 +48,8 @@ app.post('/webhooks', express.json(), async (req, res) => {
     return
   }
 
+  await conversation.markRead(message.id)
+  
   const input = message.text.body
   const output = await sophia.ask(input, conversation)
   await conversation.respond(input, output)
