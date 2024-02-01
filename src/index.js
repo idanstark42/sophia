@@ -2,7 +2,7 @@ require('dotenv').config()
 const express = require('express')
 
 const sophia = require('./sophia')
-const Whatsapp = require('./whatsapp')
+const Conversation = require('./data/conversation')
 
 const PORT = process.env.PORT || 3000
 
@@ -37,10 +37,11 @@ app.post('/webhooks', express.json(), (req, res) => {
     return
   }
 
-  const conversation = new Whatsapp(message.from)
+  const conversation = Conversation.get(message.from)
+  const input = message.text.body
 
-  sophia.ask(message.text.body, { history: [] })
-    .then(response => conversation.send(response))
+  sophia.ask(input, { history: [] })
+    .then(output => conversation.respond(input, output))
     .catch(error => console.log(error))
     .then(() => res.sendStatus(200))
 })

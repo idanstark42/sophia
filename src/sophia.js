@@ -19,7 +19,6 @@ const ask = async (input, { history }) => {
   const messages = [{ role: 'system', content: BASIC_INSTRUCTIONS }, ...history, { role: 'user', content: input }]
   return await new OpenAI().beta.chat.completions
     .runTools({ model, messages, tools })
-    .on('message', message => console.log(`${message.role}:   ${message.content}`))
     .finalContent()
 }
 
