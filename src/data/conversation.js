@@ -15,11 +15,15 @@ class Conversation {
     this.number = props.number
     this.messages = props.messages
     this.notes = props.notes
+    this.whatsapp = new Whatsapp(this.number)
+  }
+
+  async markRead (messageId) {
+    await this.whatsapp.markRead(messageId)
   }
 
   async respond (input, output) {
-    const whatsapp = new Whatsapp(this.number)
-    await whatsapp.send(output)
+    await this.whatsapp.send(output)
     const database = await init()
     const conversations = database.collection('Conversations')
     await conversations.updateOne({ number: this.number }, { $push: { messages: { $each: [{ role: 'user', content: input }, { role: 'assistant', content: output }] } } })
