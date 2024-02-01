@@ -1,5 +1,5 @@
 const Realm = require('realm')
-const Whatsapp = require('./whatsapp')
+const Whatsapp = require('../whatsapp')
 
 const RELAM_APP_ID = process.env.REALM_APP_ID
 
