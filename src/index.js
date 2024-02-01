@@ -35,7 +35,7 @@ app.post('/webhooks', express.json(), async (req, res) => {
   // Currently not allowing other people to talk to Sophia
   const conversation = await Conversation.get(message.from)
   if (message.from !== process.env.IDANS_NUMBER) {
-    conversation.respond(message.text.body, 'Sorry, I am currently not available for conversations.')
+    await conversation.respond(message.text.body, 'Sorry, I am currently not available for conversations.')
 
     res.sendStatus(200)
     return
