@@ -18,7 +18,7 @@ You are smart, helpful, kind, and with a great sense of humor.
 
 const ask = async (input, conversation) => {
   const model = process.env.OPENAI_MODEL
-  const messages = [{ role: 'system', content: BASIC_INSTRUCTIONS + '\nNotes\n' + conversation.notes }, ...conversation.messages, { role: 'user', content: input }]
+  const messages = [{ role: 'system', content: BASIC_INSTRUCTIONS + '\nBackground\n' + conversation.background + '\nNotes\n' + conversation.notes }, ...conversation.messages, { role: 'user', content: input }]
   return await new OpenAI().beta.chat.completions
     .runTools({ model, messages, tools: tools.concat(Conversation.tools(conversation)) })
     .finalContent()

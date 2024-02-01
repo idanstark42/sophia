@@ -7,7 +7,7 @@ class Conversation {
   static async get (number) {
     const database = await init()
     const conversations = database.collection('Conversations')
-    const conversation = await conversations.findOne({ number }) || await conversations.insertOne({ number, messages: [], notes: '' })
+    const conversation = await conversations.findOne({ number }) || await conversations.insertOne({ number, messages: [], background: '', notes: '' })
     return new Conversation(conversation)
   }
 
@@ -15,6 +15,7 @@ class Conversation {
     this.number = props.number
     this.messages = props.messages
     this.notes = props.notes
+    this.background = props.background
     this.whatsapp = new Whatsapp(this.number)
   }
 
