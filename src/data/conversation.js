@@ -32,12 +32,12 @@ class Conversation {
     await conversations.updateOne({ number: this.number }, { $set: { notes } })
   }
 
-  get tools () {
+  static tools (conversation) {
     return [
       {
         type: 'function',
         function: {
-          function: function take_note ({ note }) { this.takeNote(note) },
+          function: function take_note ({ note }) { conversation.takeNote(note) },
           parameters: {
             type: 'object',
             properties: {
