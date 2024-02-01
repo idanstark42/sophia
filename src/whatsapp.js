@@ -16,7 +16,7 @@ class Whatsapp {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${WHATSAPP_API_TOKEN}`
       },
-      body: {
+      body: JSON.stringify({
         messaging_product: "whatsapp",
         recipient_type: "individual",
         to: this.recepient,
@@ -25,7 +25,7 @@ class Whatsapp {
           preview_url: false,
           body: message
         }
-      }
+      })
     })
   }
 }
