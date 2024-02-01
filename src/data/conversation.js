@@ -25,7 +25,7 @@ const init = async () => {
   const app = new Realm.App({ id: RELAM_APP_ID })
   const credentials = Realm.Credentials.anonymous()
   await app.logIn(credentials)
-  return app.currentUser.mongoClient(REALM_CLUSTER).db('sophia')
+  return app.currentUser.mongoClient(REALM_CLUSTER).db('Sophia')
 }
 
 module.exports = Conversation
