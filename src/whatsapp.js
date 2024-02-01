@@ -8,7 +8,7 @@ class Whatsapp {
 
   async send (message) {
     console.log('Sending message to ' + this.recepient + ': ' + message)
-    return await fetch(WHATSAPP_API_URL, {
+    const response = await fetch(WHATSAPP_API_URL, {
       method: 'POST',
       withCredentials: true,
       credentials: 'include',
@@ -27,6 +27,11 @@ class Whatsapp {
         }
       })
     })
+    if (response.ok) {
+      console.log('Message sent.')
+    } else {
+      console.log('Message failed to send.')
+    }
   }
 }
 
