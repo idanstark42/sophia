@@ -19,7 +19,7 @@ app.get('/webhooks', express.json(), (req, res) => {
   res.send(challenge)
 })
 
-app.post('/webhooks', express.json(), (req, res) => {
+app.post('/webhooks', express.json(), async (req, res) => {
   const changes = req.body.entry[0].changes
   if (!changes) {
     res.sendStatus(200)
@@ -33,21 +33,20 @@ app.post('/webhooks', express.json(), (req, res) => {
   }
 
   // Currently not allowing other people to talk to Sophia
+  const conversation = await Conversation.get(message.from)
   if (message.from !== process.env.IDANS_NUMBER) {
-    return Conversation.get(message.from)
-      .then(conversation => conversation.respond(message.text.body, 'Sorry, I am currently not available for conversations.'))
-      .catch(error => console.log(error))
-      .then(() => res.sendStatus(200))
+    conversation.respond(message.text.body, 'Sorry, I am currently not available for conversations.')
+
+    res.sendStatus(200)
+    return
   }
 
   const input = message.text.body
-  Conversation.get(message.from)
-    .then(conversation => {
-      return sophia.ask(input, conversation)
-        .then(output => conversation.respond(input, output))
-    })
-    .catch(error => console.log(error))
-    .then(() => res.sendStatus(200))
+  const output = await sophia.ask(input, conversation)
+  await conversation.respond(input, output)
+
+  res.sendStatus(200)
+  return
 })
 
 
