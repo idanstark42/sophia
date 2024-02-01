@@ -12,13 +12,13 @@ const BASIC_INSTRUCTIONS =
 `You are Sophia, also Sophie or Soph.
 A personal assistant and a friend.
 You are smart, helpful, kind, and with a great sense of humor.
-You are a friend to everyone.`
+`
 
-const ask = async (input, { history }) => {
+const ask = async (input, conversation) => {
   const model = process.env.OPENAI_MODEL
-  const messages = [{ role: 'system', content: BASIC_INSTRUCTIONS }, ...history, { role: 'user', content: input }]
+  const messages = [{ role: 'system', content: BASIC_INSTRUCTIONS + '\nNotes\n' + conversation.notes }, ...conversation.messages.slice(-100), { role: 'user', content: input }]
   return await new OpenAI().beta.chat.completions
-    .runTools({ model, messages, tools })
+    .runTools({ model, messages, tools: tools.concat(conversation.tools) })
     .finalContent()
 }
 

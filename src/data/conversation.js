@@ -2,14 +2,19 @@ const Realm = require('realm')
 const Whatsapp = require('../whatsapp')
 
 const REALM_APP_ID = process.env.REALM_APP_ID
-const REALM_CLUSTER = process.env.REALM_CLUSTER
 
 class Conversation {
   static async get (number) {
     const database = await init()
     const conversations = database.collection('Conversations')
-    const conversation = await conversations.findOne({ number })
-    return conversation || await conversations.insertOne({ number, messages: [] })
+    const conversation = await conversations.findOne({ number }) || await conversations.insertOne({ number, messages: [], notes: '' })
+    return new Conversation(conversation)
+  }
+
+  constructor (props) {
+    this.number = props.number
+    this.messages = props.messages
+    this.notes = props.notes
   }
 
   async respond (input, output) {
@@ -19,13 +24,37 @@ class Conversation {
     const conversations = database.collection('Conversations')
     await conversations.updateOne({ number: this.number }, { $push: { messages: { $each: [{ role: 'user', content: input }, { role: 'assistant', content: output }] } } })
   }
+
+  async takeNote (note) {
+    const database = await init()
+    const conversations = database.collection('Conversations')
+    const notes = this.notes + '\n' + note
+    await conversations.updateOne({ number: this.number }, { $set: { notes } })
+  }
+
+  get tools () {
+    return [
+      {
+        type: 'function',
+        function: {
+          function: function take_note ({ note }) { this.takeNote(note) },
+          parameters: {
+            type: 'object',
+            properties: {
+              note: { type: 'string' }
+            }
+          }
+        }
+      }
+    ]
+  
+  }
 }
 
 const init = async () => {
   const app = new Realm.App({ id: REALM_APP_ID })
-  const credentials = Realm.Credentials.anonymous()
-  await app.logIn(credentials)
-  return app.currentUser.mongoClient(REALM_CLUSTER).db('Sophia')
+  await app.logIn(Realm.Credentials.anonymous())
+  return app.currentUser.mongoClient('mongodb-atlas').db('Sophia')
 }
 
 module.exports = Conversation
