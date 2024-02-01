@@ -9,9 +9,8 @@ const generateId = () => Math.floor(Math.random() * 1000000000).toString()
 class Conversation extends Realm.Object {
   static schema = {
     name: 'Conversation',
-    primaryKey: '_id',
+    primaryKey: 'string',
     properties: {
-      _id: 'int',
       number: 'string',
       messages: { type: 'list', objectType: 'Message' }
     },
