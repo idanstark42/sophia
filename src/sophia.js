@@ -24,6 +24,4 @@ const ask = async (input, conversation) => {
     .finalContent()
 }
 
-const sophia = { ask }
-
-module.exports = sophia
+module.exports = { ask }
