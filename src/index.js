@@ -20,20 +20,27 @@ app.get('/webhooks', express.json(), (req, res) => {
 })
 
 app.post('/webhooks', express.json(), async (req, res) => {
+  if (!req.body.entry || req.body.entry.length === 0 || !req.body.entry[0].changes) {
+    console.log('Invalid request body.')
+    console.log(req.body)
+
+    res.sendStatus(200)
+    return
+  }
+
   const changes = req.body.entry[0].changes
-  if (!changes) {
+  if (changes.length === 0 || !changes[0].value || !changes[0].value.messages || changes[0].value.messages.length === 0) {
+    console.log('This event is not a message.')
+    console.log(changes)
+    
     res.sendStatus(200)
     return
   }
 
   const message = changes[0].value.messages[0]
-  if (!message) {
-    res.sendStatus(200)
-    return
-  }
+  const conversation = await Conversation.get(message.from)
 
   // Currently not allowing other people to talk to Sophia
-  const conversation = await Conversation.get(message.from)
   if (message.from !== process.env.IDANS_NUMBER) {
     await conversation.respond(message.text.body, 'Sorry, I am currently not available for conversations.')
 
