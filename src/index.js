@@ -37,14 +37,14 @@ app.post('/webhooks', express.json(), (req, res) => {
     return
   }
 
-  const conversation = Conversation.get(message.from)
   const input = message.text.body
-
-  // sophia.ask(input, { history: [] })
-  //   .then(output => conversation.respond(input, output))
-  //   .catch(error => console.log(error))
-  //   .then(() => res.sendStatus(200))
-  res.sendStatus(200)
+  Conversation.get(message.from)
+    .then(conversation => {
+      return sophia.ask(input, { history: conversation.messages })
+        .then(output => conversation.respond(input, output))
+    })
+    .catch(error => console.log(error))
+    .then(() => res.sendStatus(200))
 })
 
 app.listen(PORT, () => {
