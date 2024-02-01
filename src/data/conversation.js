@@ -41,7 +41,7 @@ class Conversation {
       {
         type: 'function',
         function: {
-          function: function take_note (note) { console.log('taking note: "' + note + '"'); conversation.takeNote(note) },
+          function: function take_note (note) { console.log(note); conversation.takeNote(note) },
           parse: JSON.parse,
           parameters: {
             type: 'object',
