@@ -49,6 +49,9 @@ app.post('/webhooks', express.json(), async (req, res) => {
   return
 })
 
+app.get('/privacy_policy', (req, res) => {
+  res.redirect(process.env.PRIVACY_POLICY_URL)
+})
 
 app.listen(PORT, () => {
   console.log('Server is up on ' + PORT)
