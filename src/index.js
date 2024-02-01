@@ -40,10 +40,11 @@ app.post('/webhooks', express.json(), (req, res) => {
   const conversation = Conversation.get(message.from)
   const input = message.text.body
 
-  sophia.ask(input, { history: [] })
-    .then(output => conversation.respond(input, output))
-    .catch(error => console.log(error))
-    .then(() => res.sendStatus(200))
+  // sophia.ask(input, { history: [] })
+  //   .then(output => conversation.respond(input, output))
+  //   .catch(error => console.log(error))
+  //   .then(() => res.sendStatus(200))
+  res.sendStatus(200)
 })
 
 app.listen(PORT, () => {
