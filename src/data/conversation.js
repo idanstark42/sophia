@@ -21,7 +21,11 @@ class Conversation extends Realm.Object {
     const realm = getRealm()
     realm.write(() => {
       const conversations = realm.objects('Conversation').filtered(`number = "${number}"`)
+      console.log('conversations')
+      console.log(conversations)
       conversation = conversations.length ? conversations[0] : realm.create('Conversation', { number, messages: [] })
+      console.log('conversation')
+      console.log(conversation)
     })
     realm.close()
     return conversation
