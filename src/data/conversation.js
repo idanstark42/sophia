@@ -34,7 +34,7 @@ class Conversation extends Realm.Object {
   static get (number) {
     const realm = getRealm()
     const conversations = realm.objects('Conversation').filtered(`number = "${number}"`)
-    const conversation = conversations.length ? conversations[0] : null
+    const conversation = conversations.length ? conversations[0] : realm.create('Conversation', { number, messages: [] })
     realm.close()
     return conversation
   }
