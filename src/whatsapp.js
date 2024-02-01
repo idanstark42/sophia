@@ -6,8 +6,29 @@ class Whatsapp {
     this.recepient = recepient
   }
 
+  async markRead (messageId) {
+    return await this.request(`Marking message ${messageId} as read`, {
+      messaging_product: "whatsapp",
+      status: "read",
+      message_id: messageId
+    })
+  }
+
   async send (message) {
-    console.log('Sending message to ' + this.recepient + ': ' + message)
+    return await this.request(`Sending message to ${this.recepient}`, {
+      messaging_product: "whatsapp",
+      recipient_type: "individual",
+      to: this.recepient,
+      type: "text",
+      text: {
+        preview_url: false,
+        body: message
+      }
+    
+    })
+  }
+
+  async request (operation, body) {
     const response = await fetch(WHATSAPP_API_URL, {
       method: 'POST',
       withCredentials: true,
@@ -16,22 +37,16 @@ class Whatsapp {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${WHATSAPP_API_TOKEN}`
       },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        recipient_type: "individual",
-        to: this.recepient,
-        type: "text",
-        text: {
-          preview_url: false,
-          body: message
-        }
-      })
+      body: JSON.stringify(body)
     })
+
     if (response.ok) {
-      console.log('Message sent.')
+      console.log(`${operation} successful.`)
     } else {
-      console.log('Message failed to send.')
+      console.log(`${operation} failed.`)
     }
+
+    return response
   }
 }
 
