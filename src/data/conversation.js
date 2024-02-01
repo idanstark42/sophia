@@ -64,3 +64,5 @@ class Message extends Realm.Object {
     }
   }
 }
+
+module.exports = Conversation
