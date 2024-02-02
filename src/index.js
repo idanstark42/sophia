@@ -37,7 +37,16 @@ app.post('/webhooks', express.json(), async (req, res) => {
     return
   }
 
+
   const message = changes[0].value.messages[0]
+  const messageExists = await Conversation.exists(message.id)
+  if (messageExists) {
+    console.log('This message has already been processed: ' + message.id)
+
+    res.sendStatus(200)
+    return
+  }
+
   const conversation = await Conversation.get(message.from)
 
   // Currently not allowing other people to talk to Sophia

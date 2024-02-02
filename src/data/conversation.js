@@ -4,13 +4,6 @@ const Whatsapp = require('../whatsapp')
 const REALM_APP_ID = process.env.REALM_APP_ID
 
 class Conversation {
-  static async get (number) {
-    const database = await init()
-    const conversations = database.collection('Conversations')
-    const conversation = await conversations.findOne({ number }) || await conversations.insertOne({ number, messages: [], background: '', notes: '' })
-    return new Conversation(conversation)
-  }
-
   constructor (props) {
     this.number = props.number
     this.messages = props.messages
@@ -38,6 +31,19 @@ class Conversation {
     const conversations = database.collection('Conversations')
     const notes = this.notes + '\n' + note
     await conversations.updateOne({ number: this.number }, { $set: { notes } })
+  }
+  static async get (number) {
+    const database = await init()
+    const conversations = database.collection('Conversations')
+    const conversation = await conversations.findOne({ number }) || await conversations.insertOne({ number, messages: [], background: '', notes: '' })
+    return new Conversation(conversation)
+  }
+
+  static async exists (messageId) {
+    const database = await init()
+    const conversations = database.collection('Conversations')
+    const conversation = await conversations.findOne({ 'messages.id': messageId })
+    return conversation !== null
   }
 
   static tools (conversation) {
