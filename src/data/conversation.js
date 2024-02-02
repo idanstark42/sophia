@@ -19,15 +19,18 @@ class Conversation {
     this.whatsapp = new Whatsapp(this.number)
   }
 
-  async markRead (messageId) {
-    await this.whatsapp.markRead(messageId)
-  }
-
-  async respond (input, output) {
-    await this.whatsapp.send(output)
+  async markRead (message) {
+    await this.whatsapp.markRead(message.id)
     const database = await init()
     const conversations = database.collection('Conversations')
-    await conversations.updateOne({ number: this.number }, { $push: { messages: { $each: [{ role: 'user', content: input }, { role: 'assistant', content: output }] } } })
+    await conversations.updateOne({ number: this.number }, { $push: { messages: { $each: [{ role: 'user', content: message.text.body, id: message.id, datetime: new Date() }] } } })
+  }
+
+  async send (message) {
+    await this.whatsapp.send(message)
+    const database = await init()
+    const conversations = database.collection('Conversations')
+    await conversations.updateOne({ number: this.number }, { $push: { messages: { $each: [{ role: 'assistant', content: message, datetime: new Date() }] } } })
   }
 
   async takeNote (note) {

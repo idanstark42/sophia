@@ -22,7 +22,7 @@ app.get('/webhooks', express.json(), (req, res) => {
 app.post('/webhooks', express.json(), async (req, res) => {
   if (!req.body.entry || req.body.entry.length === 0 || !req.body.entry[0].changes) {
     console.log('Invalid request body.')
-    console.log(req.body)
+    console.log(JSON.stringify(req.body))
 
     res.sendStatus(200)
     return
@@ -31,7 +31,7 @@ app.post('/webhooks', express.json(), async (req, res) => {
   const changes = req.body.entry[0].changes
   if (changes.length === 0 || !changes[0].value || !changes[0].value.messages || changes[0].value.messages.length === 0) {
     console.log('This event is not a message.')
-    console.log(changes)
+    console.log(JSON.stringify(changes))
     
     res.sendStatus(200)
     return
@@ -48,17 +48,14 @@ app.post('/webhooks', express.json(), async (req, res) => {
     return
   }
 
-  await conversation.markRead(message.id)
-  
-  const input = message.text.body
-  const output = await sophia.ask(input, conversation)
-  await conversation.respond(input, output)
+  await conversation.markRead(message)
+  await conversation.send(await sophia.ask(message.text.body, conversation))
 
   res.sendStatus(200)
   return
 })
 
-app.get('/privacy_policy', (req, res) => {
+app.get('/privacy_policy', (_req, res) => {
   res.redirect(process.env.PRIVACY_POLICY_URL)
 })
 
