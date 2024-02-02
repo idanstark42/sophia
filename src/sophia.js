@@ -21,7 +21,11 @@ Don't be afraid to use emojis and other whatsapp lingo.
 
 const ask = async (input, conversation) => {
   const model = process.env.OPENAI_MODEL
-  const messages = [{ role: 'system', content: BASIC_INSTRUCTIONS + '\nBackground\n' + conversation.background + '\nNotes\n' + conversation.notes }, ...conversation.messages, { role: 'user', content: input }]
+  const messages = [
+    { role: 'system', content: BASIC_INSTRUCTIONS + '\nBackground\n' + conversation.background + '\nNotes\n' + conversation.notes },
+    ...conversation.messages.map(message => ({ role: message.role, content: message.content })),
+    { role: 'user', content: input }
+  ]
   return await new OpenAI().beta.chat.completions
     .runTools({ model, messages, tools: tools.concat(Conversation.tools(conversation)) })
     .finalContent()
