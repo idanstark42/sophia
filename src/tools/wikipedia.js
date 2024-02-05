@@ -8,8 +8,7 @@ const tools = (_conversation, logger) => [
         await logger.debug('Searching wikipedia for ' + params.topic)
         const page = await wiki.page(params.topic)
         const summary = await page.summary()
-        await logger.debug('Found wikipedia page', { summary: summary.extract, content_urls: summary.content_urls, titles: summary.titles })
-        return summary.extract
+        return { summary: summary.extract, link: summary.content_urls.desktop.page }
       },
       parse: JSON.parse,
       parameters: {
