@@ -42,6 +42,7 @@ app.post('/webhooks', express.json(), async (req, res) => {
   }
 
   const message = changes[0].value.messages[0]
+  await logger.debug('Received message: ' + JSON.stringify(message))
 
   if (await Conversation.exists(message.id)) {
     await logger.warn('This message has already been processed: ' + message.id)

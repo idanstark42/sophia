@@ -11,22 +11,26 @@ class Conversation {
   }
 
   async markRead (message, logger) {
+    await logger.info('Marking message as read: ' + message.id)
     await this.whatsapp.markRead(message.id, logger)
     const conversations = await collection('Conversations')
     await conversations.updateOne({ number: this.number }, { $push: { messages: { $each: [{ role: 'user', content: message.text.body, id: message.id, datetime: new Date() }] } } })
   }
 
   async send (message, logger) {
+    await logger.info('Sending message: ' + message)
     await this.whatsapp.send(message, logger)
     const conversations = await collection('Conversations')
     await conversations.updateOne({ number: this.number }, { $push: { messages: { $each: [{ role: 'assistant', content: message, datetime: new Date() }] } } })
   }
 
-  async takeNote (note) {
+  async takeNote (note, logger) {
+    await logger.info('Taking note: ' + note)
     const conversations = await collection('Conversations')
     const notes = this.notes + '\n' + note
     await conversations.updateOne({ number: this.number }, { $set: { notes } })
   }
+
   static async get (number) {
     const conversations = await collection('Conversations')
     const conversation = await conversations.findOne({ number, archived: { $ne: true } }) || await conversations.insertOne({ number, messages: [], background: '', notes: '', archived: false })
@@ -45,8 +49,7 @@ class Conversation {
         type: 'function',
         function: {
           function: async function take_note (params) {
-            await logger('taking note: "' + params.note + '"')
-            conversation.takeNote(params.note)
+            await conversation.takeNote(params.note, logger)
           },
           parse: JSON.parse,
           parameters: {

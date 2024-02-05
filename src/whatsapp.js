@@ -8,18 +8,18 @@ class Whatsapp {
 
   async markRead (messageId, logger) {
     return await this.request(`Marking message ${messageId} as read`, {
-      messaging_product: "whatsapp",
-      status: "read",
+      messaging_product: 'whatsapp',
+      status: 'read',
       message_id: messageId
     }, logger)
   }
 
   async send (message, logger) {
     return await this.request(`Sending message to ${this.recepient}`, {
-      messaging_product: "whatsapp",
-      recipient_type: "individual",
+      messaging_product: 'whatsapp',
+      recipient_type: 'individual',
       to: this.recepient,
-      type: "text",
+      type: 'text',
       text: {
         preview_url: false,
         body: message
