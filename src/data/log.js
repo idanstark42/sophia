@@ -32,7 +32,9 @@ class Logger {
   
   async log (level, message, meta = {}) {
     const logs = await collection('Logs')
-    await logs.insertOne(new LogEntry(level, message, { ...this.generalMeta, ...meta }).toJSON())
+    const entry = new LogEntry(level, message, { ...this.generalMeta, ...meta })
+    console.log(JSON.stringify(entry.toJSON()))
+    await logs.insertOne(entry.toJSON())
   }
 
   async debug (message, meta = {}) {
