@@ -18,7 +18,7 @@ const tools = (_conversation, logger) => [
         
         const logs = {}
         for (const level in LEVELS) {
-          logs[level] = await Logger.LogEntry.load({ level, timestamp: { $gte: twentyFourHoursAgo } })
+          logs[level] = await Logger.LogEntry.load({ level, timestamp: { $gte: twentyFourHoursAgo }, 'meta.versionId': logger.generalMeta.versionId })
         }
         await logger.debug('logs', logs)
         

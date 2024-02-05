@@ -6,6 +6,7 @@ const Conversation = require('./data/conversation')
 const Logger = require('./data/log')
 
 const PORT = process.env.PORT || 3000
+const RANDOM_VERSION_ID = Math.random().toString(36).substring(7)
 
 const app = express()
 
@@ -22,7 +23,7 @@ app.get('/webhooks', express.json(), (req, res) => {
 
 app.post('/webhooks', express.json(), async (req, res) => {
   const requestId = Math.random().toString(36).substring(7)
-  const logger = new Logger({ requestId })
+  const logger = new Logger({ requestId, versionId: RANDOM_VERSION_ID})
   
   if (!req.body.entry || req.body.entry.length === 0 || !req.body.entry[0].changes) {
     await logger.warn('Invalid request body.')
@@ -74,5 +75,5 @@ app.get('/privacy_policy', (_req, res) => {
 })
 
 app.listen(PORT, () => {
-  console.log('Server is up on ' + PORT)
+  console.log('Server is up on ' + PORT + ' at version ' + RANDOM_VERSION_ID + '.')
 })
