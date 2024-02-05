@@ -44,7 +44,7 @@ class Whatsapp {
       await logger.debug(`${operation} successful.`)
     } else {
       await logger.error(`${operation} failed.`)
-      console.log('response', response)
+      console.log(await response.text())
     }
 
     return response
