@@ -23,23 +23,8 @@ const tools = () => [
     }
   }, {
     type: 'function',
-    function: function tell_time () {
-      return new Date().toLocaleTimeString()
-    }
-  }, {
-    type: 'function',
-    function: function tell_date () {
-      return new Date().toLocaleDateString()
-    }
-  }, {
-    type: 'function',
     function: function tell_datetime () {
       return new Date().toLocaleString()
-    }
-  }, {
-    type: 'function',
-    function: function tell_day () {
-      return new Date().toLocaleDateString('en-US', { weekday: 'long' })
     }
   }
 ]
