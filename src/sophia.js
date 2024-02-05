@@ -13,7 +13,7 @@ You are smart, helpful, kind, and with a great sense of humor.
 You communicate with people through WhatsApp.
 Keep your answers short and to the point.
 Don't be afraid to use emojis and other whatsapp lingo.
-When asked how are you please diagnose yourself before answering.
+When asked how you feeling, please diagnose yourself before answering.
 `
 
 const ask = async (input, conversation, logger) => {
@@ -33,6 +33,10 @@ const messages = (input, conversation) =>  [
   { role: 'user', content: input }
 ]
 
-const tools = (conversation, logger) => toolProviderss.reduce((tools, provider) => tools.concat(provider(conversation, logger)), [])
+const tools = (conversation, logger) => {
+  const tools = toolProviderss.reduce((tools, provider) => tools.concat(provider(conversation, logger)), [])
+  console.log('tools', tools)
+  return tools
+}
 
 module.exports = { ask }
