@@ -1,12 +1,8 @@
 const { collection } = require('./database')
 
 class LogEntry {
-  constructor (level, message, meta) {
-    this.id = Math.random().toString(36).substring(7)
-    this.timestamp = new Date()
-    this.level = level
-    this.message = message
-    this.meta = meta
+  constructor (props) {
+    Object.assign(this, props)
   }
 
   toJSON () {
@@ -21,7 +17,8 @@ class LogEntry {
 
   static async load (query) {
     const logs = await collection('Logs')
-    return (await logs.find(query)).toArray()
+    const entries = await logs.find(query)
+    return entries.map(entry => new LogEntry(entry))
   }
 }
 
@@ -32,7 +29,7 @@ class Logger {
   
   async log (level, message, meta = {}) {
     const logs = await collection('Logs')
-    const entry = new LogEntry(level, message, { ...this.generalMeta, ...meta })
+    const entry = new LogEntry({ level, message, meta: { ...this.generalMeta, ...meta }, timestamp: new Date(), id: Math.random().toString(36).substring(7)})
     console.log(JSON.stringify(entry.toJSON()))
     await logs.insertOne(entry.toJSON())
   }
