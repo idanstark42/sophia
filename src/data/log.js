@@ -18,6 +18,11 @@ class LogEntry {
       meta: this.meta
     }
   }
+
+  static async load (query) {
+    const logs = await collection('Logs')
+    return await logs.find(query).toArray()
+  }
 }
 
 class Logger {
@@ -50,5 +55,7 @@ class Logger {
     await this.log('fatal', message, meta)
   }
 }
+
+Logger.LogEntry = LogEntry
 
 module.exports = Logger
