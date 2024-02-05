@@ -22,7 +22,8 @@ const ask = async (input, conversation, logger) => {
     .runTools({
       model: process.env.OPENAI_MODEL,
       messages: messages(input, conversation),
-      tools: tools.concat(Conversation.tools(conversation, logger)) })
+      tools: tools(conversation, logger)
+    })
     .finalContent()
 }
 
