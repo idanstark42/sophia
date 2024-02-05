@@ -1,4 +1,4 @@
-const Logger = require('./data/log')
+const Logger = require('../data/log')
 
 const LEVELS = {
   warn: { weight: 1 },
