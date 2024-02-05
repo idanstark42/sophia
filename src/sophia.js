@@ -14,6 +14,7 @@ You communicate with people through WhatsApp.
 Keep your answers short and to the point.
 Don't be afraid to use emojis and other whatsapp lingo.
 When asked how you feeling, please diagnose yourself, and use the result of the diagnosis (0 being very sick and 100 being perfectly healty).
+Use wikipedia for information.
 `
 
 const ask = async (input, conversation, logger) => {
@@ -38,7 +39,6 @@ const messages = (input, conversation) =>  [
 
 const tools = (conversation, logger) => {
   const tools = toolProviderss.reduce((tools, provider) => tools.concat(provider(conversation, logger)), [])
-  console.log('tools', tools)
   return tools
 }
 

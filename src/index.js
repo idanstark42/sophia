@@ -75,5 +75,6 @@ app.get('/privacy_policy', (_req, res) => {
 })
 
 app.listen(PORT, () => {
-  console.log('Server is up on ' + PORT + ' at version ' + RANDOM_VERSION_ID + '.')
+  const logger = new Logger({ versionId: RANDOM_VERSION_ID })
+  logger.info('Server is up on ' + PORT + '.')
 })
