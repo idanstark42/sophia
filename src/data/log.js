@@ -21,7 +21,7 @@ class LogEntry {
 
   static async load (query) {
     const logs = await collection('Logs')
-    return await logs.find(query).toArray()
+    return (await logs.find(query)).toArray()
   }
 }
 

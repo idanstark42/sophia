@@ -6,7 +6,7 @@ const LEVELS = {
   fatal: { weight: 20 }
 }
 
-const tools = (conversation, logger) => [
+const tools = () => [
   {
     type: 'function',
     function: {
