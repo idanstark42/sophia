@@ -31,7 +31,7 @@ const messages = (input, conversation) =>  [
   { role: 'system', content: BASIC_INSTRUCTIONS + '\nBackground\n' + conversation.background + '\nNotes\n' + conversation.notes },
   // taking only messages from the last 24 hours
   ...conversation.messages
-    .filter(message => Date.now() - new Date(message.datetime).valueOf() < 24 * 60 * 60 * 1000)
+    .filter(message => Date.now() - new Date(message.datetime).valueOf() < 4 * 60 * 60 * 1000)
     .map(message => ({ role: message.role, content: message.content })),
   { role: 'user', content: input }
 ]
