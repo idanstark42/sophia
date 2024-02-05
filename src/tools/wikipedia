@@ -1,0 +1,16 @@
+const wiki = require('wikipedia')
+
+const tools = (_conversation, logger) => [
+  {
+    type: 'function',
+    function: {
+      function: async function lookup_in_wikipedia (topic) {
+        await logger.debug('Searching wikipedia for ' + topic)
+        const page = await wiki.page(topic)
+        return await page.content()
+      }
+    }
+  }
+]
+
+module.exports = tools
