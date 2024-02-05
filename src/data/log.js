@@ -31,23 +31,23 @@ class Logger {
   }
 
   async debug (message, meta = {}) {
-    await Logger.log('debug', message, meta)
+    await this.log('debug', message, meta)
   }
 
   async info (message, meta = {}) {
-    await Logger.log('info', message, meta)
+    await this.log('info', message, meta)
   }
 
   async warn (message, meta = {}) {
-    await Logger.log('warn', message, meta)
+    await this.log('warn', message, meta)
   }
 
   async error (message, meta = {}) {
-    await Logger.log('error', message, meta)
+    await this.log('error', message, meta)
   }
 
   async fatal (message, meta = {}) {
-    await Logger.log('fatal', message, meta)
+    await this.log('fatal', message, meta)
   }
 }
 
