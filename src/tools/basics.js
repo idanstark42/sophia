@@ -18,6 +18,7 @@ const tools = (_conversation, logger) => [
           const logs = await Logger.LogEntry.load({ level, timestamp: { $gte: twentyFourHoursAgo } })
           return { ...obj, [level]: logs.length }
         }, {})
+        await logger.debug('logs', logs)
         // grade the health of the assistant from 1 to 100 based on the amount of fatals, errors and warnings
         const hp = Math.max(Object.entries(LEVELS).reduce((grade, [level, { weight }]) => grade - logs[level] * weight, 100), 0)
         await logger.debug('hp: ' + hp, { hp })
