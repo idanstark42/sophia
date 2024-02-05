@@ -3,7 +3,7 @@ const { collection } = require('./database')
 class LogEntry {
   constructor (level, message, meta) {
     this.id = Math.random().toString(36).substring(7)
-    this.timestamp = new Date().toISOString()
+    this.timestamp = new Date().valueOf()
     this.level = level
     this.message = message
     this.meta = meta
