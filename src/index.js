@@ -3,6 +3,7 @@ const express = require('express')
 
 const sophia = require('./sophia')
 const Conversation = require('./data/conversation')
+const Logger = require('./data/log')
 
 const PORT = process.env.PORT || 3000
 
@@ -20,9 +21,12 @@ app.get('/webhooks', express.json(), (req, res) => {
 })
 
 app.post('/webhooks', express.json(), async (req, res) => {
+  const requestId = Math.random().toString(36).substring(7)
+  const logger = new Logger({ requestId })
+  
   if (!req.body.entry || req.body.entry.length === 0 || !req.body.entry[0].changes) {
-    console.log('Invalid request body.')
-    console.log(JSON.stringify(req.body))
+    await logger.warn('Invalid request body.')
+    await logger.warn(JSON.stringify(req.body))
 
     res.sendStatus(200)
     return
@@ -30,8 +34,8 @@ app.post('/webhooks', express.json(), async (req, res) => {
 
   const changes = req.body.entry[0].changes
   if (changes.length === 0 || !changes[0].value || !changes[0].value.messages || changes[0].value.messages.length === 0) {
-    console.log('This event is not a message.')
-    console.log(JSON.stringify(changes))
+    await logger.warn('This event is not a message.')
+    await logger.warn(JSON.stringify(changes))
     
     res.sendStatus(200)
     return
@@ -40,7 +44,7 @@ app.post('/webhooks', express.json(), async (req, res) => {
   const message = changes[0].value.messages[0]
 
   if (await Conversation.exists(message.id)) {
-    console.log('This message has already been processed: ' + message.id)
+    await logger.warn('This message has already been processed: ' + message.id)
 
     res.sendStatus(200)
     return
@@ -50,14 +54,15 @@ app.post('/webhooks', express.json(), async (req, res) => {
 
   // Currently not allowing other people to talk to Sophia
   if (message.from !== process.env.IDANS_NUMBER) {
-    await conversation.respond(message.text.body, 'Sorry, I am currently not available for conversations.')
+    await logger.warn('This message is not from Idan: ' + message.from)
+    await conversation.send('Sorry, I am currently not available for conversations.', logger)
 
     res.sendStatus(200)
     return
   }
 
-  await conversation.markRead(message)
-  await conversation.send(await sophia.ask(message.text.body, conversation))
+  await conversation.markRead(message, logger)
+  await conversation.send(await sophia.ask(message.text.body, conversation, logger), logger)
 
   res.sendStatus(200)
   return

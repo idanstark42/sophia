@@ -19,7 +19,7 @@ Keep your answers short and to the point.
 Don't be afraid to use emojis and other whatsapp lingo.
 `
 
-const ask = async (input, conversation) => {
+const ask = async (input, conversation, logger) => {
   const model = process.env.OPENAI_MODEL
   const messages = [
     { role: 'system', content: BASIC_INSTRUCTIONS + '\nBackground\n' + conversation.background + '\nNotes\n' + conversation.notes },
@@ -27,7 +27,7 @@ const ask = async (input, conversation) => {
     { role: 'user', content: input }
   ]
   return await new OpenAI().beta.chat.completions
-    .runTools({ model, messages, tools: tools.concat(Conversation.tools(conversation)) })
+    .runTools({ model, messages, tools: tools.concat(Conversation.tools(conversation, logger)) })
     .finalContent()
 }
 

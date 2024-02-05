@@ -1,7 +1,5 @@
-const Realm = require('realm')
 const Whatsapp = require('../whatsapp')
-
-const REALM_APP_ID = process.env.REALM_APP_ID
+const { collection } = require('./database')
 
 class Conversation {
   constructor (props) {
@@ -12,46 +10,44 @@ class Conversation {
     this.whatsapp = new Whatsapp(this.number)
   }
 
-  async markRead (message) {
-    await this.whatsapp.markRead(message.id)
-    const database = await init()
-    const conversations = database.collection('Conversations')
+  async markRead (message, logger) {
+    await this.whatsapp.markRead(message.id, logger)
+    const conversations = await collection('Conversations')
     await conversations.updateOne({ number: this.number }, { $push: { messages: { $each: [{ role: 'user', content: message.text.body, id: message.id, datetime: new Date() }] } } })
   }
 
-  async send (message) {
-    await this.whatsapp.send(message)
-    const database = await init()
-    const conversations = database.collection('Conversations')
+  async send (message, logger) {
+    await this.whatsapp.send(message, logger)
+    const conversations = await collection('Conversations')
     await conversations.updateOne({ number: this.number }, { $push: { messages: { $each: [{ role: 'assistant', content: message, datetime: new Date() }] } } })
   }
 
   async takeNote (note) {
-    const database = await init()
-    const conversations = database.collection('Conversations')
+    const conversations = await collection('Conversations')
     const notes = this.notes + '\n' + note
     await conversations.updateOne({ number: this.number }, { $set: { notes } })
   }
   static async get (number) {
-    const database = await init()
-    const conversations = database.collection('Conversations')
-    const conversation = await conversations.findOne({ number }) || await conversations.insertOne({ number, messages: [], background: '', notes: '' })
+    const conversations = await collection('Conversations')
+    const conversation = await conversations.findOne({ number, archived: { $ne: true } }) || await conversations.insertOne({ number, messages: [], background: '', notes: '', archived: false })
     return new Conversation(conversation)
   }
 
   static async exists (messageId) {
-    const database = await init()
-    const conversations = database.collection('Conversations')
+    const conversations = await collection('Conversations')
     const conversation = await conversations.findOne({ 'messages.id': messageId })
     return conversation !== null
   }
 
-  static tools (conversation) {
+  static tools (conversation, logger) {
     return [
       {
         type: 'function',
         function: {
-          function: function take_note (params) { console.log(params.note); conversation.takeNote(params.note) },
+          function: async function take_note (params) {
+            await logger('taking note: "' + params.note + '"')
+            conversation.takeNote(params.note)
+          },
           parse: JSON.parse,
           parameters: {
             type: 'object',
@@ -64,12 +60,6 @@ class Conversation {
     ]
   
   }
-}
-
-const init = async () => {
-  const app = new Realm.App({ id: REALM_APP_ID })
-  await app.logIn(Realm.Credentials.anonymous())
-  return app.currentUser.mongoClient('mongodb-atlas').db('Sophia')
 }
 
 module.exports = Conversation
