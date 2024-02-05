@@ -30,8 +30,10 @@ const tools = (_conversation, logger) => [
     }
   }, {
     type: 'function',
-    function: function tell_datetime () {
-      return new Date().toLocaleString()
+    function: {
+      function: function tell_datetime () {
+        return new Date().toLocaleString()
+      }
     }
   }
 ]
