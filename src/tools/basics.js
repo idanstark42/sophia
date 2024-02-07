@@ -6,7 +6,7 @@ const LEVELS = {
   fatal: { weight: 20 }
 }
 
-const tools = (_conversation, logger) => [
+const tools = (conversation, logger) => [
   {
     type: 'function',
     function: {
@@ -26,6 +26,21 @@ const tools = (_conversation, logger) => [
         const hp = Math.max(Object.entries(LEVELS).reduce((grade, [level, { weight }]) => grade - logs[level].length * weight, 100), 0)
         await logger.debug('hp: ' + hp, { hp })
         return hp
+      }
+    }
+  }, {
+    type: 'function',
+    function: {
+      function: async function search_in_conversation (params) {
+        await logger.debug('Searching in conversation for ' + params.query)
+        return conversation.messages.filter(message => message.content.includes(params.query)).map(message => message.content)
+      },
+      parse: JSON.parse,
+      parameters: {
+        type: 'object',
+        properties: {
+          query: { type: 'string' }
+        }
       }
     }
   }, {
