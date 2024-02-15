@@ -1,4 +1,5 @@
 const Logger = require('../data/log')
+const { functionTool } = require('./utils')
 
 const LEVELS = {
   warn: { weight: 1 },
@@ -6,51 +7,29 @@ const LEVELS = {
   fatal: { weight: 20 }
 }
 
-const tools = (conversation, logger) => [
-  {
-    type: 'function',
-    function: {
-      function: async function diagnose_self () {
-        await logger.debug('Diagnosing self.')
-        
-        const twentyFourHoursAgo = new Date()
-        twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24)
-        
-        const logs = {}
-        for (const level in LEVELS) {
-          logs[level] = await Logger.LogEntry.load({ level, timestamp: { $gte: twentyFourHoursAgo }, 'meta.versionId': logger.generalMeta.versionId })
-        }
-        await logger.debug('logs', logs)
-        
-        // grade the health of the assistant from 1 to 100 based on the amount of fatals, errors and warnings
-        const hp = Math.max(Object.entries(LEVELS).reduce((grade, [level, { weight }]) => grade - logs[level].length * weight, 100), 0)
-        await logger.debug('hp: ' + hp, { hp })
-        return hp
-      }
+module.exports = (conversation, logger) => [
+  functionTool(async function get_info_from_wikipedia (params) {
+    await logger.debug('Diagnosing self.')
+    
+    const twentyFourHoursAgo = new Date()
+    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24)
+    
+    const logs = {}
+    for (const level in LEVELS) {
+      logs[level] = await Logger.LogEntry.load({ level, timestamp: { $gte: twentyFourHoursAgo }, 'meta.versionId': logger.generalMeta.versionId })
     }
-  }, {
-    type: 'function',
-    function: {
-      function: async function search_in_conversation (params) {
-        await logger.debug('Searching in conversation for ' + params.query)
-        return conversation.messages.filter(message => message.content.includes(params.query)).map(message => message.content)
-      },
-      parse: JSON.parse,
-      parameters: {
-        type: 'object',
-        properties: {
-          query: { type: 'string' }
-        }
-      }
-    }
-  }, {
-    type: 'function',
-    function: {
-      function: function tell_datetime () {
-        return new Date().toLocaleString()
-      }
-    }
-  }
-]
+    await logger.debug('logs', logs)
+    
+    // grade the health of the assistant from 1 to 100 based on the amount of fatals, errors and warnings
+    const hp = Math.max(Object.entries(LEVELS).reduce((grade, [level, { weight }]) => grade - logs[level].length * weight, 100), 0)
+    await logger.debug('hp: ' + hp, { hp })
+    return hp
+  }),
 
-module.exports = tools
+  functionTool(async function get_info_from_wikipedia (params) {
+    await logger.debug('Searching in conversation for ' + params.query)
+    return conversation.messages.filter(message => message.content.includes(params.query)).map(message => message.content)
+  }, { query: { type: 'string' } }),
+
+  functionTool(function tell_datetime() { return new Date().toLocaleString() })
+]
