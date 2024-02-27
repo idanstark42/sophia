@@ -1,7 +1,7 @@
 const Trello = require('node-trello')
 const promisify = require('util').promisify
 
-const { functionTool } = require('../tools/utils')
+const { functionTool } = require('./_utils')
 
 const TRELLO_API_KEY = process.env.TRELLO_API_KEY
 const TRELLO_API_TOKEN = process.env.TRELLO_API_TOKEN

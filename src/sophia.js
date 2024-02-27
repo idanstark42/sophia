@@ -3,7 +3,7 @@ const OpenAI = require('openai')
 const Conversation = require('./data/conversation')
 
 const toolsDirectory = require('path').join(__dirname, 'tools')
-const toolProviderss = require('fs').readdirSync(toolsDirectory).map(file => require('./tools/' + file))
+const toolProviderss = require('fs').readdirSync(toolsDirectory).filter(file => !file.startsWith('_')).map(file => require('./tools/' + file))
 toolProviderss.push(Conversation.tools)
 
 const BASIC_INSTRUCTIONS =
