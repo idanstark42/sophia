@@ -1,5 +1,5 @@
 const wiki = require('wikipedia')
-const { functionTool } = require('./utils')
+const { functionTool } = require('./_utils')
 
 const tools = (_conversation, logger) => [
   functionTool(async function get_info_from_wikipedia (params) {
