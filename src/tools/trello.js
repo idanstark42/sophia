@@ -147,7 +147,7 @@ module.exports = (_conversation, _logger) => [
     } catch (err) {
       return err.message
     }
-  }, { id: { type: 'string' }, checklist: { type: 'object', properties: { name: { type: 'string' } } }),
+  }, { id: { type: 'string' }, checklist: { type: 'object', properties: { name: { type: 'string' } } } }),
 
   functionTool(async function set_checklist_item_status(params) {
     try {
@@ -162,5 +162,5 @@ module.exports = (_conversation, _logger) => [
     } catch (err) {
       return err.message
     }
-  }, { id: { type: 'string' }, checklist: { type: 'string' }, item: { type: 'string' }, state: { type: 'string', enum: ['complete', 'incomplete']}),
+  }, { id: { type: 'string' }, checklist: { type: 'string' }, item: { type: 'string' }, state: { type: 'string', enum: ['complete', 'incomplete']} })
 ]
