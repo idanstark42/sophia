@@ -35,30 +35,27 @@ const listFromName = async (listKey) => {
   return list
 }
 
-const addLabels = async (card, labels) => {
+const addLabels = async (cardId, labels) => {
   for (const label of labels) {
-    await post(`/1/cards/${card.id}/idLabels`, { value: label })
+    await post(`/1/cards/${cardId}/idLabels`, { value: label })
   }
 }
 
-const removeLabels = async (card, labels) => {
+const removeLabels = async (cardId, labels) => {
   for (const label of labels) {
-    await post(`/1/cards/${card.id}/idLabels/${label.id}`, { value: '' })
+    await post(`/1/cards/${cardId}/idLabels/${label.id}`, { value: '' })
   }
 }
 
-const addChecklist = async (card, checklist) => {
-  const newChecklist = await post(`/1/cards/${card.id}/checklists`, { name: checklist.name })
+const addChecklist = async (cardId, checklist) => {
+  const newChecklist = await post(`/1/cards/${cardId}/checklists`, { name: checklist.name })
   for (const item of checklist.items) {
     await post(`/1/checklists/${newChecklist.id}/checkItems`, { name: item.name, state: item.state })
   }
 }
 
-const removeChecklist = async (card, checklist) => {
-  const currentChecklists = await get(`/1/cards/${card.id}/checklists`)
-  for (const checklist of currentChecklists) {
-    await post(`/1/checklists/${checklist.id}/name`, { value: '' })
-  }
+const removeChecklist = async (cardId, checklist) => {
+  await post(`/1/cards/${cardId}/checklists/${checklist.id}/closed`, { value: true })
 }
 
 const checkItem = async (checklist, item) => {
@@ -87,10 +84,10 @@ module.exports = (_conversation, logger) => [
     await safely(async () => {
       const list = await listFromName(params.list)
       const card = await post('/1/cards', { idList: list.id, name: params.name, due: params.due })
-      if (params.labels) await addLabels(card, params.labels)
+      if (params.labels) await addLabels(card.id, params.labels)
       if (params.checklists) {
         for (const checklist of params.checklists) {
-          await addChecklist(card, checklist)
+          await addChecklist(card.id, checklist)
         }
       }
       await logger.debug('Task created')
@@ -98,56 +95,55 @@ module.exports = (_conversation, logger) => [
     }, logger)
   }, { list: { type: 'string', enum: Object.keys(LISTS) }, name: { type: 'string' }, due: { type: 'string' }, labels: { type: 'array', items: { type: 'string' } }, checklists: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, items: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, state: { type: 'string' } } } } } } } }),
 
-  functionTool(async function move_task(params) {
+  functionTool(async function move_task_to_list(params) {
     return await safely(async () => {
-      const list = await listFromName(params.targetList)
-      await post(`/1/cards/${params.id}/idList`, { value: list.id })
+      const list = await listFromName(params.list)
+      await post(`/1/cards/${params.cardId}/idList`, { value: list.id })
       await logger.debug('Task moved')
       return 'Task moved'
     }, logger)
-  }, { id: { type: 'string' }, targetList: { type: 'string', enum: Object.keys(LISTS) } }),
+  }, { cardId: { type: 'string' }, list: { type: 'string', enum: Object.keys(LISTS) } }),
 
   functionTool(async function update_task(params) {
     return await safely(async () => {
-      const card = await get(`/1/cards/${params.id}`)
-      if (params.name) await post(`/1/cards/${card.id}/name`, { value: params.name })
-      if (params.due) await post(`/1/cards/${card.id}/due`, { value: params.due })
+      if (params.name) await post(`/1/cards/${params.cardId}/name`, { value: params.name })
+      if (params.due) await post(`/1/cards/${params.cardId}/due`, { value: params.due })
       if (params.labels) {
-        const currentLabels = await get(`/1/cards/${card.id}/labels`)
+        const currentLabels = await get(`/1/cards/${params.cardId}/labels`)
         const labelsToRemove = currentLabels.filter(label => !params.labels.includes(label.name))
         const labelsToAdd = params.labels.filter(label => !currentLabels.map(label => label.name).includes(label))
-        await addLabels(card, labelsToAdd)
-        await removeLabels(card, labelsToRemove)
+        await addLabels(params.cardId, labelsToAdd)
+        await removeLabels(params.cardId, labelsToRemove)
       }
       await logger.debug('Task updated')
       return 'Task updated'
     }, logger)
-  }, { id: { type: 'string' }, name: { type: 'string' }, due: { type: 'string' }, labels: { type: 'array', items: { type: 'string' } } }),
+  }, { cardId: { type: 'string' }, name: { type: 'string' }, due: { type: 'string' }, labels: { type: 'array', items: { type: 'string' } } }),
 
   functionTool(async function add_checklist(params) {
     return await safely(async () => {
-      await addChecklist(await get(`/1/cards/${params.id}`), params.checklist)
+      await addChecklist(await get(`/1/cards/${params.cardId}`), params.checklist)
       await logger.debug('Checklist added')
       return 'Checklist added'
     }, logger)
-  }, { id: { type: 'string' }, checklist: { type: 'object', properties: { name: { type: 'string' }, items: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, state: { type: 'string' } } } } } } }),
+  }, { cardId: { type: 'string' }, checklist: { type: 'object', properties: { name: { type: 'string' }, items: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, state: { type: 'string' } } } } } } }),
 
   functionTool(async function remove_checklist(params) {
     return await safely(async () => {
-      await removeChecklist(await get(`/1/cards/${params.id}`), params.checklist)
+      await removeChecklist(await get(`/1/cards/${params.cardId}`), params.checklist)
       await logger.debug('Checklist removed')
       return 'Checklist removed'
     }, logger)
-  }, { id: { type: 'string' }, checklist: { type: 'object', properties: { name: { type: 'string' } } } }),
+  }, { cardId: { type: 'string' }, checklist: { type: 'object', properties: { name: { type: 'string' } } } }),
 
   functionTool(async function set_checklist_item_status(params) {
     return await safely(async () => {
-      const checklist = await get(`/1/cards/${params.id}`).checklists.find(checklist => checklist.name === params.checklist)
+      const checklist = await get(`/1/cards/${params.cardId}`).checklists.find(checklist => checklist.name === params.checklist)
       const item = checklist.items.find(item => item.name === params.item)
       if (params.state === 'complete')    await checkItem(checklist, item)
       else                                await uncheckItem(checklist, item)
       await logger.debug('Checklist item status set', params.state)
       return 'Checklist item status set' + params.state
     }, logger)
-  }, { id: { type: 'string' }, checklist: { type: 'string' }, item: { type: 'string' }, state: { type: 'string', enum: ['complete', 'incomplete']} })
+  }, { cardId: { type: 'string' }, checklist: { type: 'string' }, item: { type: 'string' }, state: { type: 'string', enum: ['complete', 'incomplete']} })
 ]
