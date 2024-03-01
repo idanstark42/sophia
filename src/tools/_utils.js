@@ -14,3 +14,12 @@ exports.functionTool = (func, params) => {
 
   return tool
 }
+
+exports.safly = async (callback, logger) => {
+  try {
+    return await callback()
+  } catch (err) {
+    logger.error(err)
+    return err.message
+  }
+}

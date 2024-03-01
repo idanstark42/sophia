@@ -1,7 +1,7 @@
 const Trello = require('node-trello')
 const promisify = require('util').promisify
 
-const { functionTool } = require('./_utils')
+const { functionTool, safely } = require('./_utils')
 
 const TRELLO_API_KEY = process.env.TRELLO_API_KEY
 const TRELLO_API_TOKEN = process.env.TRELLO_API_TOKEN
@@ -19,7 +19,7 @@ const LISTS = {
   halted: { boardName: 'Tactical Tasks', listName: 'HALTED' }
 }
 
-const loadList = async (listKey) => {
+const listFromName = async (listKey) => {
   const { listName, boardName } = LISTS[listKey]
 
   const board = await get('/1/members/me/boards')
@@ -69,24 +69,23 @@ const uncheckItem = async (checklist, item) => {
   await post(`/1/checklists/${checklist.id}/checkItems/${item.id}`, { state: 'incomplete' })
 }
 
-module.exports = (_conversation, _logger) => [
+module.exports = (_conversation, logger) => [
   functionTool(async function read_list_tasks(params) {
-    try {
-      const list = await loadList(params.list)
+    await safely(async () => {
+      const list = await listFromName(params.list)
       const cards = await get(`/1/lists/${list.id}/cards`)
       for (const card of cards) {
         const checklists = await get(`/1/cards/${card.id}/checklists`)
         card.checklists = checklists.map(checklist => ({ name: checklist.name, items: checklist.checkItems.map(({ id, name, state }) => ({ id, name, state }))}))
       }
+      await logger.debug('Tasks read in list ' + params.list)
       return cards.map(({ id, name, comments, due, labels, checklists }) => ({ id, name, comments, due, labels: labels.map(label => label.name), checklists }))
-    } catch (err) {
-      return err.message
-    }
+    }, logger)
   }, { list: { type: 'string', enum: Object.keys(LISTS) } }),
   
   functionTool(async function create_task(params) {
-    try {
-      const list = await loadList(params.list)
+    await safely(async () => {
+      const list = await listFromName(params.list)
       const card = await post('/1/cards', { idList: list.id, name: params.name, due: params.due })
       if (params.labels) await addLabels(card, params.labels)
       if (params.checklists) {
@@ -94,25 +93,22 @@ module.exports = (_conversation, _logger) => [
           await addChecklist(card, checklist)
         }
       }
-      return card
-    } catch (err) {
-      return err.message
-    }
+      await logger.debug('Task created')
+      return 'Task created'
+    }, logger)
   }, { list: { type: 'string', enum: Object.keys(LISTS) }, name: { type: 'string' }, due: { type: 'string' }, labels: { type: 'array', items: { type: 'string' } }, checklists: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, items: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, state: { type: 'string' } } } } } } } }),
 
   functionTool(async function move_task(params) {
-    try {
-      const card = await get(`/1/cards/${params.id}`)
-      const list = await loadList(params.targetList)
-      await post(`/1/cards/${card.id}/idList`, { value: list.id })
-      return card
-    } catch (err) {
-      return err.message
-    }
+    return await safely(async () => {
+      const list = await listFromName(params.targetList)
+      await post(`/1/cards/${params.id}/idList`, { value: list.id })
+      await logger.debug('Task moved')
+      return 'Task moved'
+    }, logger)
   }, { id: { type: 'string' }, targetList: { type: 'string', enum: Object.keys(LISTS) } }),
 
   functionTool(async function update_task(params) {
-    try {
+    return await safely(async () => {
       const card = await get(`/1/cards/${params.id}`)
       if (params.name) await post(`/1/cards/${card.id}/name`, { value: params.name })
       if (params.due) await post(`/1/cards/${card.id}/due`, { value: params.due })
@@ -123,44 +119,35 @@ module.exports = (_conversation, _logger) => [
         await addLabels(card, labelsToAdd)
         await removeLabels(card, labelsToRemove)
       }
-      return card
-    } catch (err) {
-      return err.message
-    }    
+      await logger.debug('Task updated')
+      return 'Task updated'
+    }, logger)
   }, { id: { type: 'string' }, name: { type: 'string' }, due: { type: 'string' }, labels: { type: 'array', items: { type: 'string' } } }),
 
   functionTool(async function add_checklist(params) {
-    try {
-      const card = await get(`/1/cards/${params.id}`)
-      await addChecklist(card, params.checklist)
-      return card
-    } catch (err) {
-      return err.message
-    }
+    return await safely(async () => {
+      await addChecklist(await get(`/1/cards/${params.id}`), params.checklist)
+      await logger.debug('Checklist added')
+      return 'Checklist added'
+    }, logger)
   }, { id: { type: 'string' }, checklist: { type: 'object', properties: { name: { type: 'string' }, items: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, state: { type: 'string' } } } } } } }),
 
   functionTool(async function remove_checklist(params) {
-    try {
-      const card = await get(`/1/cards/${params.id}`)
-      await removeChecklist(card, params.checklist)
-      return card
-    } catch (err) {
-      return err.message
-    }
+    return await safely(async () => {
+      await removeChecklist(await get(`/1/cards/${params.id}`), params.checklist)
+      await logger.debug('Checklist removed')
+      return 'Checklist removed'
+    }, logger)
   }, { id: { type: 'string' }, checklist: { type: 'object', properties: { name: { type: 'string' } } } }),
 
   functionTool(async function set_checklist_item_status(params) {
-    try {
-      const card = await get(`/1/cards/${params.id}`)
-      const checklist = card.checklists.find(checklist => checklist.name === params.checklist)
+    return await safely(async () => {
+      const checklist = await get(`/1/cards/${params.id}`).checklists.find(checklist => checklist.name === params.checklist)
       const item = checklist.items.find(item => item.name === params.item)
-      if (params.state === 'complete')
-        await checkItem(checklist, item)
-      else
-        await uncheckItem(checklist, item)
-      return card
-    } catch (err) {
-      return err.message
-    }
+      if (params.state === 'complete')    await checkItem(checklist, item)
+      else                                await uncheckItem(checklist, item)
+      await logger.debug('Checklist item status set', params.state)
+      return 'Checklist item status set' + params.state
+    }, logger)
   }, { id: { type: 'string' }, checklist: { type: 'string' }, item: { type: 'string' }, state: { type: 'string', enum: ['complete', 'incomplete']} })
 ]
