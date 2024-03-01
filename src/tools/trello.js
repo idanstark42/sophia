@@ -19,8 +19,8 @@ const LISTS = {
   halted: { boardName: 'Tactical Tasks', listName: 'HALTED' }
 }
 
-const loadList = async (list) => {
-  const { listName, boardName } = LISTS[list]
+const loadList = async (listKey) => {
+  const { listName, boardName } = LISTS[listKey]
 
   const board = await get('/1/members/me/boards')
     .then(boards => boards.find(board => board.name === boardName))
