@@ -55,6 +55,7 @@ const addChecklist = async (cardId, checklist) => {
 module.exports = (_conversation, logger) => [
   functionTool(async function read_list_tasks(params) {
     return await safely(async () => {
+      await logger.debug('Reading tasks in list', params)
       const [list] = await listFromName(params.list)
       const cards = await get(`/1/lists/${list.id}/cards`)
       for (const card of cards) {
@@ -68,6 +69,7 @@ module.exports = (_conversation, logger) => [
   
   functionTool(async function create_task(params) {
     return await safely(async () => {
+      await logger.debug('Creating task', params)
       const [list, boardName] = await listFromName(params.list)
       const card = await post('/1/cards', { idList: list.id, name: params.name, due: params.due })
       if (params.labels) await setLabels(card.id, params.labels, boardName)
@@ -83,6 +85,7 @@ module.exports = (_conversation, logger) => [
 
   functionTool(async function move_task_to_list(params) {
     return await safely(async () => {
+      await logger.debug('Moving task', params)
       const [list] = await listFromName(params.list)
       await put(`/1/cards/${params.cardId}`, { idList: list.id })
       await logger.debug('Task moved')
@@ -92,6 +95,7 @@ module.exports = (_conversation, logger) => [
 
   functionTool(async function update_task(params) {
     return await safely(async () => {
+      await logger.debug('Updating task', params)
       const boardId = (await get(`/1/cards/${params.cardId}`)).idBoard
       const boardName = (await get(`/1/boards/${boardId}`)).name
 
@@ -105,6 +109,7 @@ module.exports = (_conversation, logger) => [
 
   functionTool(async function add_checklist(params) {
     return await safely(async () => {
+      await logger.debug('Adding checklist to task', params)
       await addChecklist(await get(`/1/cards/${params.cardId}`), params.checklist)
       await logger.debug('Checklist added')
       return 'Checklist added'
@@ -113,6 +118,7 @@ module.exports = (_conversation, logger) => [
 
   functionTool(async function set_checklist_item_status(params) {
     return await safely(async () => {
+      await logger.debug('Setting checklist item status', params)
       const checklist = await get(`/1/cards/${params.cardId}`).checklists.find(checklist => checklist.name === params.checklist)
       const item = checklist.items.find(item => item.name === params.item)
       await put(`/1/cards/${params.cardId}/checkItem/${item.id}`, { state: params.state })
