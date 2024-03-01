@@ -32,19 +32,22 @@ const listFromName = async (listKey) => {
 
   if (!list) throw new Error('List not found')
 
-  return list
+  return [list, boardName]
 }
 
-const addLabels = async (cardId, labels) => {
-  for (const label of labels) {
-    await post(`/1/cards/${cardId}/idLabels`, { value: label })
-  }
+const boardLabels = async (boardName) => {
+  const board = await get('/1/members/me/boards')
+    .then(boards => boards.find(board => board.name === boardName))
+  
+  if (!board) throw new Error('Board not found')
+
+  return get(`/1/boards/${board.id}/labels`)
 }
 
-const removeLabels = async (cardId, labels) => {
-  for (const label of labels) {
-    await post(`/1/cards/${cardId}/idLabels/${label.id}`, { value: '' })
-  }
+const setLabels = async (cardId, labels, boardName) => {
+  if (!labels) return
+  if (!Array.isArray(labels)) labels = [labels]
+  return await post(`/1/cards/${cardId}`, { idLabels: (await boardLabels()).filter(label => !labels.includes(label.name)).map(label => label.id) })
 }
 
 const addChecklist = async (cardId, checklist) => {
@@ -55,21 +58,21 @@ const addChecklist = async (cardId, checklist) => {
 }
 
 const removeChecklist = async (cardId, checklist) => {
-  await post(`/1/cards/${cardId}/checklists/${checklist.id}/closed`, { value: true })
+  return await post(`/1/cards/${cardId}/checklists/${checklist.id}`, { closed: true })
 }
 
 const checkItem = async (checklist, item) => {
-  await post(`/1/checklists/${checklist.id}/checkItems/${item.id}`, { state: 'complete' })
+  return await post(`/1/checklists/${checklist.id}/checkItems/${item.id}`, { state: 'complete' })
 }
 
 const uncheckItem = async (checklist, item) => {
-  await post(`/1/checklists/${checklist.id}/checkItems/${item.id}`, { state: 'incomplete' })
+  return await post(`/1/checklists/${checklist.id}/checkItems/${item.id}`, { state: 'incomplete' })
 }
 
 module.exports = (_conversation, logger) => [
   functionTool(async function read_list_tasks(params) {
-    await safely(async () => {
-      const list = await listFromName(params.list)
+    return await safely(async () => {
+      const [list] = await listFromName(params.list)
       const cards = await get(`/1/lists/${list.id}/cards`)
       for (const card of cards) {
         const checklists = await get(`/1/cards/${card.id}/checklists`)
@@ -81,10 +84,10 @@ module.exports = (_conversation, logger) => [
   }, { list: { type: 'string', enum: Object.keys(LISTS) } }),
   
   functionTool(async function create_task(params) {
-    await safely(async () => {
-      const list = await listFromName(params.list)
+    return await safely(async () => {
+      const [list, boardName] = await listFromName(params.list)
       const card = await post('/1/cards', { idList: list.id, name: params.name, due: params.due })
-      if (params.labels) await addLabels(card.id, params.labels)
+      if (params.labels) await setLabels(card.id, params.labels, boardName)
       if (params.checklists) {
         for (const checklist of params.checklists) {
           await addChecklist(card.id, checklist)
@@ -97,8 +100,8 @@ module.exports = (_conversation, logger) => [
 
   functionTool(async function move_task_to_list(params) {
     return await safely(async () => {
-      const list = await listFromName(params.list)
-      await post(`/1/cards/${params.cardId}/idList`, { value: list.id })
+      const [list] = await listFromName(params.list)
+      await post(`/1/cards/${params.cardId}`, { idList: list.id })
       await logger.debug('Task moved')
       return 'Task moved'
     }, logger)
@@ -106,15 +109,12 @@ module.exports = (_conversation, logger) => [
 
   functionTool(async function update_task(params) {
     return await safely(async () => {
-      if (params.name) await post(`/1/cards/${params.cardId}/name`, { value: params.name })
-      if (params.due) await post(`/1/cards/${params.cardId}/due`, { value: params.due })
-      if (params.labels) {
-        const currentLabels = await get(`/1/cards/${params.cardId}/labels`)
-        const labelsToRemove = currentLabels.filter(label => !params.labels.includes(label.name))
-        const labelsToAdd = params.labels.filter(label => !currentLabels.map(label => label.name).includes(label))
-        await addLabels(params.cardId, labelsToAdd)
-        await removeLabels(params.cardId, labelsToRemove)
-      }
+      const boardId = (await get(`/1/cards/${params.cardId}`)).idBoard
+      const boardName = (await get(`/1/boards/${boardId}`)).name
+
+      if (params.name) await post(`/1/cards/${params.cardId}`, { name: params.name })
+      if (params.due) await post(`/1/cards/${params.cardId}`, { due: params.due })
+      if (params.labels) await setLabels(params.cardId, params.labels, boardName)
       await logger.debug('Task updated')
       return 'Task updated'
     }, logger)
