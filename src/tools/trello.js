@@ -9,6 +9,7 @@ const TRELLO_API_TOKEN = process.env.TRELLO_API_TOKEN
 const trello = new Trello(TRELLO_API_KEY, TRELLO_API_TOKEN)
 const get = promisify(trello.get.bind(trello))
 const post = promisify(trello.post.bind(trello))
+const put = promisify(trello.put.bind(trello))
 
 const LISTS = {
   ideas: { boardName: 'Long Term Projects', listName: 'IDEAS' },
@@ -22,23 +23,17 @@ const LISTS = {
 const listFromName = async (listKey) => {
   const { listName, boardName } = LISTS[listKey]
 
-  const board = await get('/1/members/me/boards')
-    .then(boards => boards.find(board => board.name === boardName))
-
+  const board = await get('/1/members/me/boards').then(boards => boards.find(board => board.name === boardName))
   if (!board) throw new Error('Board not found')
 
-  const list = await get(`/1/boards/${board.id}/lists`)
-    .then(lists => lists.find(list => list.name === listName))
-
+  const list = await get(`/1/boards/${board.id}/lists`).then(lists => lists.find(list => list.name === listName))
   if (!list) throw new Error('List not found')
 
   return [list, boardName]
 }
 
-const boardLabels = async (boardName) => {
-  const board = await get('/1/members/me/boards')
-    .then(boards => boards.find(board => board.name === boardName))
-  
+const boardLabels = async boardName => {
+  const board = await get('/1/members/me/boards').then(boards => boards.find(board => board.name === boardName))
   if (!board) throw new Error('Board not found')
 
   return get(`/1/boards/${board.id}/labels`)
@@ -47,7 +42,7 @@ const boardLabels = async (boardName) => {
 const setLabels = async (cardId, labels, boardName) => {
   if (!labels) return
   if (!Array.isArray(labels)) labels = [labels]
-  return await post(`/1/cards/${cardId}`, { idLabels: (await boardLabels()).filter(label => !labels.includes(label.name)).map(label => label.id) })
+  return await put(`/1/cards/${cardId}`, { idLabels: (await boardLabels(boardName)).filter(label => !labels.includes(label.name)).map(label => label.id) })
 }
 
 const addChecklist = async (cardId, checklist) => {
@@ -55,18 +50,6 @@ const addChecklist = async (cardId, checklist) => {
   for (const item of checklist.items) {
     await post(`/1/checklists/${newChecklist.id}/checkItems`, { name: item.name, state: item.state })
   }
-}
-
-const removeChecklist = async (cardId, checklist) => {
-  return await post(`/1/cards/${cardId}/checklists/${checklist.id}`, { closed: true })
-}
-
-const checkItem = async (checklist, item) => {
-  return await post(`/1/checklists/${checklist.id}/checkItems/${item.id}`, { state: 'complete' })
-}
-
-const uncheckItem = async (checklist, item) => {
-  return await post(`/1/checklists/${checklist.id}/checkItems/${item.id}`, { state: 'incomplete' })
 }
 
 module.exports = (_conversation, logger) => [
@@ -101,7 +84,7 @@ module.exports = (_conversation, logger) => [
   functionTool(async function move_task_to_list(params) {
     return await safely(async () => {
       const [list] = await listFromName(params.list)
-      await post(`/1/cards/${params.cardId}`, { idList: list.id })
+      await put(`/1/cards/${params.cardId}`, { idList: list.id })
       await logger.debug('Task moved')
       return 'Task moved'
     }, logger)
@@ -112,8 +95,8 @@ module.exports = (_conversation, logger) => [
       const boardId = (await get(`/1/cards/${params.cardId}`)).idBoard
       const boardName = (await get(`/1/boards/${boardId}`)).name
 
-      if (params.name) await post(`/1/cards/${params.cardId}`, { name: params.name })
-      if (params.due) await post(`/1/cards/${params.cardId}`, { due: params.due })
+      if (params.name) await put(`/1/cards/${params.cardId}`, { name: params.name })
+      if (params.due) await put(`/1/cards/${params.cardId}`, { due: params.due })
       if (params.labels) await setLabels(params.cardId, params.labels, boardName)
       await logger.debug('Task updated')
       return 'Task updated'
@@ -128,20 +111,11 @@ module.exports = (_conversation, logger) => [
     }, logger)
   }, { cardId: { type: 'string' }, checklist: { type: 'object', properties: { name: { type: 'string' }, items: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, state: { type: 'string' } } } } } } }),
 
-  functionTool(async function remove_checklist(params) {
-    return await safely(async () => {
-      await removeChecklist(await get(`/1/cards/${params.cardId}`), params.checklist)
-      await logger.debug('Checklist removed')
-      return 'Checklist removed'
-    }, logger)
-  }, { cardId: { type: 'string' }, checklist: { type: 'object', properties: { name: { type: 'string' } } } }),
-
   functionTool(async function set_checklist_item_status(params) {
     return await safely(async () => {
       const checklist = await get(`/1/cards/${params.cardId}`).checklists.find(checklist => checklist.name === params.checklist)
       const item = checklist.items.find(item => item.name === params.item)
-      if (params.state === 'complete')    await checkItem(checklist, item)
-      else                                await uncheckItem(checklist, item)
+      await put(`/1/cards/${params.cardId}/checkItem/${item.id}`, { state: params.state })
       await logger.debug('Checklist item status set', params.state)
       return 'Checklist item status set' + params.state
     }, logger)

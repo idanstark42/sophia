@@ -17,7 +17,6 @@ When asked how you feeling, please diagnose yourself, and use the result of the 
 `
 
 const ask = async (input, conversation, logger) => {
-  console.log(tools(conversation, logger))
   return await new OpenAI().beta.chat.completions
     .runTools({
       model: process.env.OPENAI_MODEL,
