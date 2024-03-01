@@ -15,7 +15,7 @@ exports.functionTool = (func, params) => {
   return tool
 }
 
-exports.safly = async (callback, logger) => {
+exports.safely = async (callback, logger) => {
   try {
     return await callback()
   } catch (err) {
