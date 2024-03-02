@@ -72,7 +72,7 @@ module.exports = (_conversation, logger) => [
     return await safely(async () => {
       await logger.debug('Creating task', params)
       const [list, boardName] = await listFromName(params.list)
-      const card = await post('/1/cards', { idList: list.id, name: params.name, due: params.due })
+      const card = await post('/1/cards', { idList: list.id, name: params.name })
       if (params.labels) await setLabels(card.id, params.labels, boardName)
       if (params.checklists) {
         for (const checklist of params.checklists) {
@@ -82,7 +82,7 @@ module.exports = (_conversation, logger) => [
       await logger.debug('Task created')
       return 'Task created'
     }, logger)
-  }, { list: { type: 'string', enum: Object.keys(LISTS) }, name: { type: 'string' }, due: { type: 'string' }, labels: { type: 'array', items: { type: 'string' } }, checklists: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, items: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, state: { type: 'string' } } } } } } } }),
+  }, { list: { type: 'string', enum: Object.keys(LISTS) }, name: { type: 'string' }, labels: { type: 'array', items: { type: 'string' } }, checklists: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, items: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, state: { type: 'string' } } } } } } } }),
 
   functionTool(async function move_task_to_list(params) {
     return await safely(async () => {
