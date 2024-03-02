@@ -17,6 +17,7 @@ const LISTS = {
   monthly: { boardName: 'Tactical Tasks', listName: 'COMING UP (month)' },
   weekly: { boardName: 'Tactical Tasks', listName: 'UP NEXT (week)' },
   noNow: { boardName: 'Tactical Tasks', listName: 'IN PROGRESS (not now)' },
+  done: { boardName: 'Tactical Tasks', listName: 'DONE' },
   halted: { boardName: 'Tactical Tasks', listName: 'HALTED' }
 }
 
