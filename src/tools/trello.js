@@ -72,8 +72,8 @@ module.exports = (_conversation, logger) => [
     return await safely(async () => {
       await logger.debug('Creating task', params)
       const [list, boardName] = await listFromName(params.list)
-      const card = await post('/1/cards', { idList: list.id, name: params.name })
-      if (params.labels) await setLabels(card.id, params.labels, boardName)
+      const card = await post('/1/cards', { idList: list.id, name: task_params.name })
+      if (params.task_labels) await setLabels(card.id, params.labels, boardName)
       if (params.checklists) {
         for (const checklist of params.checklists) {
           await addChecklist(card.id, checklist)
@@ -82,17 +82,17 @@ module.exports = (_conversation, logger) => [
       await logger.debug('Task created')
       return 'Task created'
     }, logger)
-  }, { list: { type: 'string', enum: Object.keys(LISTS) }, name: { type: 'string' }, labels: { type: 'array', items: { type: 'string' } }, checklists: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, items: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, state: { type: 'string' } } } } } } } }),
+  }, { list: { type: 'string', enum: Object.keys(LISTS) }, task_name: { type: 'string' }, task_labels: { type: 'array', items: { type: 'string' } }, checklists: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, items: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, state: { type: 'string' } } } } } } } }),
 
   functionTool(async function move_task_to_list(params) {
     return await safely(async () => {
       await logger.debug('Moving task', params)
-      const [list] = await listFromName(params.list)
+      const [list] = await listFromName(params.move_to)
       await put(`/1/cards/${params.cardId}`, { idList: list.id })
       await logger.debug('Task moved')
       return 'Task moved'
     }, logger)
-  }, { cardId: { type: 'string' }, list: { type: 'string', enum: Object.keys(LISTS) } }),
+  }, { cardId: { type: 'string' }, move_to: { type: 'string', enum: Object.keys(LISTS) } }),
 
   functionTool(async function update_task(params) {
     return await safely(async () => {
