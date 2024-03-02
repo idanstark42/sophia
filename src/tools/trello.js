@@ -62,7 +62,8 @@ module.exports = (_conversation, logger) => [
         const checklists = await get(`/1/cards/${card.id}/checklists`)
         card.checklists = checklists.map(checklist => ({ name: checklist.name, items: checklist.checkItems.map(({ id, name, state }) => ({ id, name, state }))}))
       }
-      await logger.debug('Tasks read in list ' + params.list)
+      await logger.debug('Tasks read')
+      await logger.debug(cards.map(({ id, name, comments, due, labels, checklists }) => ({ id, name, comments, due, labels: labels.map(label => label.name), checklists })))
       return cards.map(({ id, name, comments, due, labels, checklists }) => ({ id, name, comments, due, labels: labels.map(label => label.name), checklists }))
     }, logger)
   }, { list: { type: 'string', enum: Object.keys(LISTS) } }),
