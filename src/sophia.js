@@ -37,8 +37,12 @@ const messages = (input, conversation) =>  [
 
 const tools = async (conversation, logger) => {
   const tools = []
+  let i = 0
   for (const provider of toolProviderss) {
-    tools.push(...(await provider(conversation, logger)))
+    const providerTools = await provider(conversation, logger)
+    logger.debug('Provider ' + i + ' tools', { tools: providerTools })    
+    tools.push(...providerTools)
+    i++
   }
   return tools
 }
