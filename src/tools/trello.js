@@ -53,7 +53,7 @@ const addChecklist = async (cardId, checklist) => {
   }
 }
 
-module.exports = (_conversation, logger) => [
+module.exports = async (_conversation, logger) => [
   functionTool(async function read_list_tasks(params) {
     return await safely(async () => {
       await logger.debug('Reading tasks in list', params)
