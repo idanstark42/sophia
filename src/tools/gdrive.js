@@ -49,7 +49,7 @@ module.exports = async (_conversation, logger) => {
     const func = async function (params) {
       await logger.debug('Calling google action', { action, params })
       if (actionDefinition.preProcessing) params = actions[action].preProcessing(params)
-      const response = await google.action(action, params)
+      const response = await action(action, params)
       await logger.debug('Google action response', { action, response })
       if (actionDefinition.postProcessing) return actions[action].postProcessing(response)
       return response
