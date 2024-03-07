@@ -1,7 +1,6 @@
 const Logger = require('../data/log')
 const { functionTool } = require('./_utils')
-
-const GDRIVE_URL = process.env.GDRIVE_URL
+const { action } = require('../apis/google')
 
 const WEIGHTS = {
   LOGS: 0.7,
@@ -27,7 +26,7 @@ module.exports = (conversation, logger) => [
     }
 
     // getting the google drive ping
-    const gdriveHP = await fetch(`${GDRIVE_URL}?action=ping`).then(response => response.ok ? 100 : 0)
+    const gdriveHP = await action('ping').then(() => 100).catch(() => 0)
     
     // grade the health of the assistant from 1 to 100 based on the amount of fatals, errors and warnings
     const logsHP = Math.max(Object.entries(LEVELS).reduce((grade, [level, { weight }]) => grade - logs[level].length * weight, 100), 0)
