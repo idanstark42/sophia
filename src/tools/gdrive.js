@@ -45,12 +45,18 @@ const getActions = async () => {
 
 module.exports = async (_conversation, logger) => {
   const actions = await getActions()
-  return Object.entries(actions).map(([action, actionDefinition]) => functionTool(async function (params) {
-    await logger.debug('Calling google action', { action, params })
-    if (actionDefinition.preProcessing) params = actions[action].preProcessing(params)
-    const response = await google.action(action, params)
-    await logger.debug('Google action response', { action, response })
-    if (actionDefinition.postProcessing) return actions[action].postProcessing(response)
-    return response
-  }, actionDefinition.params))
+  return Object.entries(actions).map(([action, actionDefinition]) => {
+    const func = async function (params) {
+      await logger.debug('Calling google action', { action, params })
+      if (actionDefinition.preProcessing) params = actions[action].preProcessing(params)
+      const response = await google.action(action, params)
+      await logger.debug('Google action response', { action, response })
+      if (actionDefinition.postProcessing) return actions[action].postProcessing(response)
+      return response
+    }
+
+    Object.defineProperty(func, 'name', { value: action })
+    
+    return functionTool(func, actionDefinition.params)
+  })
 }
