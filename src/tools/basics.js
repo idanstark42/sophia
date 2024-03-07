@@ -27,6 +27,8 @@ module.exports = (conversation, logger) => [
 
     // getting the google drive ping
     const gdriveHP = await action('ping').then(() => 100).catch(() => 0)
+
+    const calendarEvents = await action('get_calendar_events', { startDate: new Date(), endDate: new Date() })
     
     // grade the health of the assistant from 1 to 100 based on the amount of fatals, errors and warnings
     const logsHP = Math.max(Object.entries(LEVELS).reduce((grade, [level, { weight }]) => grade - logs[level].length * weight, 100), 0)

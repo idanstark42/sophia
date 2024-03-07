@@ -21,7 +21,7 @@ const ask = async (input, conversation, logger) => {
     .runTools({
       model: process.env.OPENAI_MODEL,
       messages: messages(input, conversation),
-      tools: tools(conversation, logger)
+      tools: await tools(conversation, logger)
     })
     .finalContent()
 }
@@ -35,8 +35,11 @@ const messages = (input, conversation) =>  [
   { role: 'user', content: input }
 ]
 
-const tools = (conversation, logger) => {
-  const tools = toolProviderss.reduce((tools, provider) => tools.concat(provider(conversation, logger)), [])
+const tools = async (conversation, logger) => {
+  const tools = []
+  for (const provider of toolProviderss) {
+    tools.push(...await provider(conversation, logger))
+  }
   return tools
 }
 

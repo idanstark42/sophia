@@ -1,5 +1,3 @@
-const CALENDAR_ID = 'primary'
-
 function respondJSON (data) {
   return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON)
 }
@@ -9,9 +7,15 @@ function ping () {
   return respondJSON(response)
 }
 
+function get_calendar_names () {
+  const calendars = CalendarApp.getAllCalendars()
+  const response = calendars.map(calendar => ({ name: calendar.getName() }))
+  return respondJSON(response)
+}
+
 function get_calendar_events ({ start, end }) {
-  const calendar = CalendarApp.getCalendarById(CALENDAR_ID)
-  const events = calendar.getEvents(new Date(start), new Date(end))
+  const calendars = CalendarApp.getAllCalendars()
+  const events = calendars.flatMap(calendar => calendar.getEvents(new Date(start), new Date(end)))
   const response = events.map(event => ({
     title: event.getTitle(),
     description: event.getDescription(),
@@ -23,13 +27,15 @@ function get_calendar_events ({ start, end }) {
   return respondJSON(response)
 }
 
-function add_calendar_event ({ title, description, location, start, end, allDay }) {
-  const calendar = CalendarApp.getCalendarById(CALENDAR_ID)
+function add_calendar_event ({ calendarName, title, description, location, start, end, allDay }) {
+  const calendar = CalendarApp.getCalendarsByName(calendarName)[0]
+  if (!calendar) return respondJSON({ error: 'Calendar not found' })
+
   const event = calendar.createEvent(title, new Date(start), new Date(end), { description, location, allDay })
   return respondJSON({ id: event.getId() })
 }
 
-const actions = { ping, get_calendar_events, add_calendar_event }
+const actions = { ping, get_calendar_names, get_calendar_events, add_calendar_event }
 
 function doGet (request) {
   const { action, ...params } = request.parameter
