@@ -26,6 +26,9 @@ module.exports = async (_conversation, logger) => {
           event.category = COLORS_CODING[event.color]
           event.start = new Date(event.start)
           event.end = new Date(event.end)
+          if (event.start.toDateString() === event.end.toDateString()) {
+            event.end.setDate(event.end.getDate() + 1)
+          }
         })
         await logger.debug('Events read')
         return events
