@@ -19,7 +19,7 @@ const getActions = async () => {
 
   return {
     get_calendar_events: {
-      params: { startDate: { type: 'date' }, endDate: { type: 'date' } },
+      params: { startDate: { type: 'string' }, endDate: { type: 'string' } },
       postProcessing: events => {
         events.forEach(event => {
           event.category = COLORS_CODING[event.color]
@@ -30,7 +30,7 @@ const getActions = async () => {
       }
     },
     add_calendar_event: {
-      params: { calendarName: { type: 'string', enum: calendarNames }, title: { type: 'string' }, startDate: { type: 'date' }, endDate: { type: 'date' }, description: { type: 'string' }, allDay: { type: 'boolean' }, category: { type: 'string', enum: Object.values(COLORS_CODING) } },
+      params: { calendarName: { type: 'string', enum: calendarNames }, title: { type: 'string' }, startDate: { type: 'string' }, endDate: { type: 'string' }, description: { type: 'string' }, allDay: { type: 'boolean' }, category: { type: 'string', enum: Object.values(COLORS_CODING) } },
       preProcessing: params => {
         params.start = params.startDate
         params.end = params.endDate
