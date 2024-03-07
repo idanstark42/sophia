@@ -45,7 +45,7 @@ const getActions = async () => {
 
 module.exports = async (_conversation, logger) => {
   const actions = await getActions()
-  Object.entries(actions).map(([action, actionDefinition]) => functionTool(async function (params) {
+  return Object.entries(actions).map(([action, actionDefinition]) => functionTool(async function (params) {
     await logger.debug('Calling google action', { action, params })
     if (actionDefinition.preProcessing) params = actions[action].preProcessing(params)
     const response = await google.action(action, params)
