@@ -1,4 +1,4 @@
-const { google } = require('../apis/google')
+const { action } = require('../apis/google')
 const { functionTool } = require('./_utils')
 
 // The meaning of the colors in the calendar
@@ -15,7 +15,7 @@ const COLORS_CODING = {
 }
 
 const getActions = async () => {
-  const calendarNames = await google.action('get_calendar_names').then(calendars => calendars.map(calendar => calendar.name))
+  const calendarNames = await action('get_calendar_names').then(calendars => calendars.map(calendar => calendar.name))
 
   return {
     get_calendar_events: {
