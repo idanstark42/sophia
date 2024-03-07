@@ -17,12 +17,15 @@ function get_calendar_events ({ start, end }) {
   const calendars = CalendarApp.getAllCalendars()
   const events = calendars.flatMap(calendar => calendar.getEvents(new Date(start), new Date(end)))
   const response = events.map(event => ({
+    id: event.getId(),
     title: event.getTitle(),
     description: event.getDescription(),
     location: event.getLocation(),
     start: event.getStartTime(),
     end: event.getEndTime(),
     allDay: event.isAllDayEvent(),
+    calendar: event.getOriginalCalendar().getName(),
+    color: event.getColor(),
   }))
   return respondJSON(response)
 }
