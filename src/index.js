@@ -74,6 +74,12 @@ app.get('/privacy_policy', (_req, res) => {
   res.redirect(process.env.PRIVACY_POLICY_URL)
 })
 
+app.get('/logs', async (req, res) => {
+  // Load logs according to the query parameters
+  const logs = await Logger.LogEntry.load(req.query)
+  res.send(logs)
+})
+
 app.listen(PORT, () => {
   const logger = new Logger({ versionId: RANDOM_VERSION_ID })
   logger.info('Server is up on ' + PORT + '.')

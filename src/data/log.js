@@ -15,7 +15,7 @@ class LogEntry {
     }
   }
 
-  static async load (query) {
+  static async load (query = {}) {
     const logs = await collection('Logs')
     const entries = await logs.find(query)
     return entries.map(entry => new LogEntry(entry))
