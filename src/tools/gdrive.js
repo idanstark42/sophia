@@ -21,11 +21,11 @@ module.exports = async (_conversation, logger) => {
     functionTool(async function get_calendar_events(params) {
       return await safely(async () => {
         // If the start date and end date are the same, the user wants to see the events of that day. Add one day to the end date to include the events of that day
-        if (params.startDate && params.endDate && params.startDate === params.endDate) {
-          const endDate = new Date(params.endDate)
-          endDate.setDate(endDate.getDate() + 1)
-          params.endDate = endDate.toISOString().split('T')[0]
-        }
+        // if (params.start && params.end && params.start === params.end) {
+        //   const end = new Date(params.end)
+        //   end.setDate(end.getDate() + 1)
+        //   params.end = end.toISOString().split('T')[0]
+        // }
         await logger.debug('Reading events from calendar', params)
         const events = await action('get_calendar_events', params)
         events.forEach(event => {
@@ -36,7 +36,7 @@ module.exports = async (_conversation, logger) => {
         await logger.debug('Events read')
         return events
       }, logger)
-    }, { startDate: { type: 'string' }, endDate: { type: 'string' } }),
+    }, { start: { type: 'string' }, end: { type: 'string' } }),
     functionTool(async function add_calendar_event(params) {
       return await safely(async () => {
         await logger.debug('Adding event to calendar', params)
@@ -45,6 +45,6 @@ module.exports = async (_conversation, logger) => {
         await logger.debug('Event added')
         return 'Event added'
       }, logger)
-    }, { calendarName: { type: 'string', enum: calendarNames }, title: { type: 'string' }, startDate: { type: 'string' }, endDate: { type: 'string' }, description: { type: 'string' }, allDay: { type: 'boolean' }, category: { type: 'string', enum: Object.values(COLORS_CODING) } })
+    }, { calendarName: { type: 'string', enum: calendarNames }, title: { type: 'string' }, start: { type: 'string' }, end: { type: 'string' }, description: { type: 'string' }, allDay: { type: 'boolean' }, category: { type: 'string', enum: Object.values(COLORS_CODING) } })
   ]
 }
