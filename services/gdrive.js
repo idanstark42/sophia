@@ -24,7 +24,7 @@ function get_calendar_events ({ start, end }) {
     start: event.getStartTime(),
     end: event.getEndTime(),
     allDay: event.isAllDayEvent(),
-    calendar: event.getOriginalCalendar().getName(),
+    calendar: CalendarApp.getCalendarById(event.getOriginalCalendarId()).getName(),
     color: event.getColor(),
   }))
   return respondJSON(response)

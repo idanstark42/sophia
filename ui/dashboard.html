@@ -7,17 +7,27 @@
           .meta {
             float: right;
           }
+          #notes {
+            white-space: pre-wrap;
+          }
         </style>
     </head>
     <body>
       <!-- content -->
       <div class="ui container" style="margin-top: 50px;">
-        <!-- loader -->
-        <div class="ui active dimmer" id="loader">
-          <div class="ui text loader">Loading</div>
+        <!-- notes -->
+        <div class="ui segment">
+          <div class="ui active inverted dimmer" id="notes-loader">
+            <div class="ui text loader">Loading notes...</div>
+          </div>
+          <h2 class="ui header">Notes</h2>
+          <div class="ui relaxed" id="notes"></div>
         </div>
         <!-- logs -->
         <div class="ui segment">
+          <div class="ui active inverted dimmer" id="logs-loader">
+            <div class="ui text loader">Loading logs...</div>
+          </div>
           <h2 class="ui header">Logs</h2>
           <div class="ui relaxed" id="logs"></div>
         </div>
@@ -35,7 +45,7 @@
           success: function(data) {
             // Display logs
             console.log(data);
-            $('#loader').removeClass('active');
+            $('#logs-loader').removeClass('active');
             data.filter(entry => entry.message.constructor === String && !(entry.message.startsWith('[') || entry.message.startsWith('{'))).forEach(entry => {
               const { level, message, timestamp, meta } = entry
               $('#logs').append(`
@@ -46,6 +56,20 @@
                 </div>
               `)
             })
+          },
+          error: function(err) {
+            console.log(err);
+          }
+        });
+        // Make request for all notes
+        $.ajax({
+          url: '/notes',
+          type: 'GET',
+          success: function(data) {
+            // Display notes
+            console.log(data);
+            $('#notes-loader').removeClass('active');
+            $('#notes')[0].innerHTML = data
           },
           error: function(err) {
             console.log(err);

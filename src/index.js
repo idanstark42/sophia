@@ -104,6 +104,11 @@ app.get('/test/:tool', async (req, res) => {
   res.send(result)
 })
 
+app.get('/notes', async (_req, res) => {
+  const conversation = await Conversation.get(process.env.IDANS_NUMBER)
+  res.send(conversation.notes)
+})
+
 app.listen(PORT, () => {
   const logger = new Logger({ versionId: RANDOM_VERSION_ID })
   logger.info('Server is up on ' + PORT + '.')
