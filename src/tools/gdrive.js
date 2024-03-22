@@ -21,14 +21,17 @@ module.exports = async (_conversation, logger) => {
     functionTool(async function get_calendar_events(params) {
       return await safely(async () => {
         await logger.debug('Reading events from calendar', params)
+        // If the start date and end date are the same, the user wants to see the events of that day. Add one day to the end date to include the events of that day
+        if (params.startDate && params.endDate && params.startDate === params.endDate) {
+          const endDate = new Date(params.endDate)
+          endDate.setDate(endDate.getDate() + 1)
+          params.endDate = endDate.toISOString().split('T')[0]
+        }
         const events = await action('get_calendar_events', params)
         events.forEach(event => {
           event.category = COLORS_CODING[event.color]
           event.start = new Date(event.start)
           event.end = new Date(event.end)
-          if (event.start.toDateString() === event.end.toDateString()) {
-            event.end.setDate(event.end.getDate() + 1)
-          }
         })
         await logger.debug('Events read')
         return events
