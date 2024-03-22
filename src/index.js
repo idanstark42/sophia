@@ -1,5 +1,6 @@
 require('dotenv').config()
 const express = require('express')
+const fs = require('fs')
 
 const sophia = require('./sophia')
 const Conversation = require('./data/conversation')
@@ -76,8 +77,15 @@ app.get('/privacy_policy', (_req, res) => {
 
 app.get('/logs', async (req, res) => {
   // Load logs according to the query parameters
-  const logs = await Logger.LogEntry.load(req.query)
+  const limit = Number(req.query.limit) || 100
+  delete req.query.limit
+  const logs = await Logger.LogEntry.load(req.query, limit)
   res.send(logs)
+})
+
+app.get('/dashboard', async (req, res) => {
+  const dashboardHTML = fs.readFileSync('./ui/dashboard.html', 'utf8')
+  res.send(dashboardHTML)
 })
 
 app.listen(PORT, () => {

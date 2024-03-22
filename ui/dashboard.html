@@ -1,0 +1,56 @@
+<html>
+    <head>
+        <title>Dashboard</title>
+        <!-- semantic UI online link -->
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.css">
+        <style>
+          .meta {
+            float: right;
+          }
+        </style>
+    </head>
+    <body>
+      <!-- content -->
+      <div class="ui container" style="margin-top: 50px;">
+        <!-- loader -->
+        <div class="ui active dimmer" id="loader">
+          <div class="ui text loader">Loading</div>
+        </div>
+        <!-- logs -->
+        <div class="ui segment">
+          <h2 class="ui header">Logs</h2>
+          <div class="ui relaxed" id="logs"></div>
+        </div>
+      </div>
+    </body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.4.1/semantic.min.js"></script>
+    <script>
+      // loader
+      $(document).ready(function() {
+        // Make request for last 1000 logs
+        $.ajax({
+          url: '/logs?limit=1000',
+          type: 'GET',
+          success: function(data) {
+            // Display logs
+            console.log(data);
+            $('#loader').removeClass('active');
+            data.filter(entry => entry.message.constructor === String && !(entry.message.startsWith('[') || entry.message.startsWith('{'))).forEach(entry => {
+              const { level, message, timestamp, meta } = entry
+              $('#logs').append(`
+                <div class="ui message ${level === 'error' || level === 'fatal' ? 'error' : 'info'}">
+                  <p class="meta">${meta ? Object.entries(meta).map(([key, value]) => `${key}: ${value}`).join('<br>') : ''}</p>
+                  <div>${message}</div>
+                  <div>${new Date(timestamp).toLocaleString()}</div>
+                </div>
+              `)
+            })
+          },
+          error: function(err) {
+            console.log(err);
+          }
+        });
+      });
+    </script>
+</html>
