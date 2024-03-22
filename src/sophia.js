@@ -44,4 +44,4 @@ const tools = async (conversation, logger) => {
   return tools
 }
 
-module.exports = { ask }
+module.exports = { ask, tools }
