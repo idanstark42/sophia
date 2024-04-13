@@ -36,7 +36,7 @@ module.exports = async (_conversation, logger) => {
         await logger.debug('Events read')
         return events
       }, logger)
-    }, { start: { type: 'string' }, end: { type: 'string' } }),
+    }, { start: { type: 'date' }, end: { type: 'date' } }),
     functionTool(async function add_calendar_event(params) {
       return await safely(async () => {
         await logger.debug('Adding event to calendar', params)
@@ -45,6 +45,6 @@ module.exports = async (_conversation, logger) => {
         await logger.debug('Event added')
         return 'Event added'
       }, logger)
-    }, { calendarName: { type: 'string', enum: calendarNames }, title: { type: 'string' }, start: { type: 'string' }, end: { type: 'string' }, description: { type: 'string' }, allDay: { type: 'boolean' }, category: { type: 'string', enum: Object.values(COLORS_CODING) } })
+    }, { calendarName: { type: 'string', enum: calendarNames }, title: { type: 'string' }, start: { type: 'date' }, end: { type: 'date' }, description: { type: 'string' }, allDay: { type: 'boolean' }, category: { type: 'string', enum: Object.values(COLORS_CODING) } })
   ]
 }
