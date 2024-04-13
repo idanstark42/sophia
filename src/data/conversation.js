@@ -1,5 +1,6 @@
 const Whatsapp = require('../whatsapp')
 const { collection } = require('./database')
+const { safely, functionTool } = require('../tools/_utils')
 
 class Conversation {
   constructor (props) {
@@ -45,21 +46,9 @@ class Conversation {
 
   static tools (conversation, logger) {
     return [
-      {
-        type: 'function',
-        function: {
-          function: async function take_note (params) {
-            await conversation.takeNote(params.note, logger)
-          },
-          parse: JSON.parse,
-          parameters: {
-            type: 'object',
-            properties: {
-              note: { type: 'string' }
-            }
-          }
-        }
-      }
+      functionTool(async function take_note (params) {
+        return await safely(async () => await conversation.takeNote(params.note, logger), logger)
+      }, { note: { type: 'string' } })
     ]
   
   }

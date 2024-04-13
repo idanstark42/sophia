@@ -135,13 +135,13 @@ module.exports = async (_conversation, logger) => [
       await logger.debug('Setting checklist item status', params)
       const checklists = await get(`/1/cards/${params.cardId}/checklists`)
       console.log(checklists)
-      const checklist = checklists.find(checklist => checklist.name === params.checklist)
+      const checklist = checklists.find(checklist => checklist.name === params.checklistName)
       console.log(checklist)
-      const item = checklist.checkItems.find(item => item.name === params.item)
+      const item = checklist.checkItems.find(item => item.name === params.itemName)
       console.log(item)
       await put(`/1/cards/${params.cardId}/checklist/${checklist.id}/checkItem/${item.id}`, { state: params.state })
       await logger.debug('Checklist item status set', params.state)
       return 'Checklist item status set ' + params.state
     }, logger)
-  }, { cardId: { type: 'string' }, checklist: { type: 'string' }, item: { type: 'string' }, state: { type: 'string', enum: ['complete', 'incomplete']} })
+  }, { cardId: { type: 'string' }, checklistName: { type: 'string' }, itemName: { type: 'string' }, state: { type: 'string', enum: ['complete', 'incomplete']} })
 ]
