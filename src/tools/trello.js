@@ -59,6 +59,20 @@ module.exports = async (_conversation, logger) => [
     }, logger)
   }, { list: { type: 'string', enum: Object.keys(LISTS) } }),
 
+  functionTool(async function get_task_from_name(params) {
+    return await safely(async () => {
+      await logger.debug('Getting task from name', params)
+      const response = await get(`/1/search?query=${params.name}&modelTypes=cards`)
+      const card = response.cards[0]
+      if (!card) throw new Error('Task not found')
+      const checklists = await get(`/1/cards/${card.id}/checklists`)
+      card.checklists = checklists.map(checklist => ({ name: checklist.name, items: checklist.checkItems.map(({ id, name, state }) => ({ id, name, state }))}))
+      await logger.debug('Task found')
+      return { id: card.id, name: card.name, comments: card.comments, due: card.due, labels: card.labels.map(label => label.name), checklists }
+    }, logger)
+
+  }, { name: { type: 'string' } }),
+
   functionTool(async function get_available_labels_for_list(params){
     return await safely(async () => {
       await logger.debug('Getting labels for list', params)
@@ -70,7 +84,7 @@ module.exports = async (_conversation, logger) => [
     return await safely(async () => {
       await logger.debug('Creating task', params)
       const [list, boardName] = await listFromName(params.list)
-      const card = await post('/1/cards', { idList: list.id, name: task_params.name })
+      const card = await post('/1/cards', { idList: list.id, name: params.name })
       if (params.task_labels) await setLabels(card.id, params.labels, boardName)
       if (params.checklists) {
         for (const checklist of params.checklists) {

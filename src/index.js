@@ -78,36 +78,35 @@ app.get('/privacy_policy', (_req, res) => {
   res.redirect(process.env.PRIVACY_POLICY_URL)
 })
 
-app.get('/logs', async (req, res) => {
-  // Load logs according to the query parameters
-  const limit = Number(req.query.limit) || 100
-  delete req.query.limit
-  const logs = await Logger.LogEntry.load(req.query, limit)
-  res.send(logs)
-})
+app.use(express.static('ui'))
 
-app.get('/dashboard', async (req, res) => {
-  const dashboardHTML = fs.readFileSync('./ui/dashboard.html', 'utf8')
-  res.send(dashboardHTML)
-})
+if (process.env.NODE_ENV === 'development') {
+  app.get('/test/:tool', async (req, res) => {
+    const params = req.query
+    const tools = await sophia.tools(new Conversation({}), req.logger)
+    const toolFunction = tools.find(tool => tool.function && tool.function.function.name === req.params.tool)
+    if (!toolFunction) {
+      res.send('Tool not found.')
+      return
+    }
 
-app.get('/test/:tool', async (req, res) => {
-  const params = req.query
-  const tools = await sophia.tools(new Conversation({}), req.logger)
-  const toolFunction = tools.find(tool => tool.function && tool.function.function.name === req.params.tool)
-  if (!toolFunction) {
-    res.send('Tool not found.')
-    return
-  }
+    const result = await toolFunction.function.function(params)
+    res.send(result)
+  })
 
-  const result = await toolFunction.function.function(params)
-  res.send(result)
-})
+  app.get('/notes', async (_req, res) => {
+    const conversation = await Conversation.get(process.env.IDANS_NUMBER)
+    res.send(conversation.notes)
+  })
 
-app.get('/notes', async (_req, res) => {
-  const conversation = await Conversation.get(process.env.IDANS_NUMBER)
-  res.send(conversation.notes)
-})
+  app.get('/logs', async (req, res) => {
+    // Load logs according to the query parameters
+    const limit = Number(req.query.limit) || 100
+    delete req.query.limit
+    const logs = await Logger.LogEntry.load(req.query, limit)
+    res.send(logs)
+  })
+}
 
 app.listen(PORT, () => {
   const logger = new Logger({ versionId: RANDOM_VERSION_ID })
