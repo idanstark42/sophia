@@ -21,6 +21,7 @@ module.exports = async (_conversation, logger) => {
     functionTool(async function get_calendar_events(params) {
       return await safely(async () => {
         // If the start date and end date are the same, the user wants to see the events of that day. Add one day to the end date to include the events of that day
+        params.start = params.startDate, params.end = params.endDate
         if (params.start && params.end && params.start === params.end) {
           const end = new Date(params.end)
           end.setDate(end.getDate() + 1)
@@ -36,8 +37,9 @@ module.exports = async (_conversation, logger) => {
         await logger.debug('Events read')
         return events
       }, logger)
-    }, { start: { type: 'date' }, end: { type: 'date' } }),
+    }, { startDate: { type: 'string' }, endDate: { type: 'string' } }),
     functionTool(async function add_calendar_event(params) {
+      params.start = params.startDate, params.end = params.endDate
       return await safely(async () => {
         await logger.debug('Adding event to calendar', params)
         params.color = Object.entries(COLORS_CODING).find(([_, category]) => category === params.category)[0]
@@ -45,6 +47,6 @@ module.exports = async (_conversation, logger) => {
         await logger.debug('Event added')
         return 'Event added'
       }, logger)
-    }, { calendarName: { type: 'string', enum: calendarNames }, title: { type: 'string' }, start: { type: 'date' }, end: { type: 'date' }, description: { type: 'string' }, allDay: { type: 'boolean' }, category: { type: 'string', enum: Object.values(COLORS_CODING) } })
+    }, { calendarName: { type: 'string', enum: calendarNames }, title: { type: 'string' }, startDate: { type: 'string' }, endDate: { type: 'string' }, description: { type: 'string' }, allDay: { type: 'boolean' }, category: { type: 'string', enum: Object.values(COLORS_CODING) } })
   ]
 }
