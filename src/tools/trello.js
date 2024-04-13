@@ -58,6 +58,13 @@ module.exports = async (_conversation, logger) => [
       return cards.map(({ id, name, comments, due, labels, checklists }) => ({ id, name, comments, due, labels: labels.map(label => label.name), checklists }))
     }, logger)
   }, { list: { type: 'string', enum: Object.keys(LISTS) } }),
+
+  functionTool(async function get_available_labels_for_list(params){
+    return await safely(async () => {
+      await logger.debug('Getting labels for list', params)
+      return await boardLabels(LISTS[params.list].boardName)
+    }, logger)
+  }, { list: { type: 'string', enum: Object.keys(LISTS) } }),
   
   functionTool(async function create_task(params) {
     return await safely(async () => {
