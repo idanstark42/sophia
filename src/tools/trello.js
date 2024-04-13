@@ -31,9 +31,10 @@ const boardLabels = async boardName => {
 }
 
 const setLabels = async (cardId, labels, boardName) => {
-  if (!labels) return
   if (!Array.isArray(labels)) labels = [labels]
-  return await put(`/1/cards/${cardId}`, { idLabels: (await boardLabels(boardName)).filter(label => !labels.includes(label.name)).map(label => label.id) })
+  const selectedLabels = (await boardLabels(boardName)).filter(label => labels.includes(label.name)).map(label => label.id)
+  console.log(selectedLabels)
+  return await put(`/1/cards/${cardId}/idLabels`, { value: selectedLabels })
 }
 
 const addChecklist = async (cardId, checklist) => {
@@ -112,9 +113,9 @@ module.exports = async (_conversation, logger) => [
       const boardId = (await get(`/1/cards/${params.cardId}`)).idBoard
       const boardName = (await get(`/1/boards/${boardId}`)).name
 
-      if (params.name) await put(`/1/cards/${params.cardId}/name`, { value: params.name })
-      if (params.due) await put(`/1/cards/${params.cardId}/due`, { value: params.due })
-      if (params.labels) await setLabels(params.cardId, params.labels, boardName)
+      if (params.hasOwnProperty('name'))    await put(`/1/cards/${params.cardId}/name`, { value: params.name })
+      if (params.hasOwnProperty('due'))     await put(`/1/cards/${params.cardId}/due`, { value: params.due })
+      if (params.hasOwnProperty('labels'))  await setLabels(params.cardId, params.labels, boardName)
       await logger.debug('Task updated')
       return 'Task updated'
     }, logger)
@@ -132,11 +133,15 @@ module.exports = async (_conversation, logger) => [
   functionTool(async function set_checklist_item_status(params) {
     return await safely(async () => {
       await logger.debug('Setting checklist item status', params)
-      const checklist = await get(`/1/cards/${params.cardId}`).checklists.find(checklist => checklist.name === params.checklist)
-      const item = checklist.items.find(item => item.name === params.item)
-      await put(`/1/cards/${params.cardId}/checkItem/${item.id}/state`, { value: params.state })
+      const checklists = await get(`/1/cards/${params.cardId}/checklists`)
+      console.log(checklists)
+      const checklist = checklists.find(checklist => checklist.name === params.checklist)
+      console.log(checklist)
+      const item = checklist.checkItems.find(item => item.name === params.item)
+      console.log(item)
+      await put(`/1/cards/${params.cardId}/checklist/${checklist.id}/checkItem/${item.id}`, { state: params.state })
       await logger.debug('Checklist item status set', params.state)
-      return 'Checklist item status set' + params.state
+      return 'Checklist item status set ' + params.state
     }, logger)
   }, { cardId: { type: 'string' }, checklist: { type: 'string' }, item: { type: 'string' }, state: { type: 'string', enum: ['complete', 'incomplete']} })
 ]
