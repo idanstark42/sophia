@@ -35,7 +35,7 @@ module.exports = async (conversation, logger) => [
     return hp
   }),
 
-  functionTool(async function get_info_from_wikipedia (params) {
+  functionTool(async function get_info_from_conversation (params) {
     await logger.debug('Searching in conversation for ' + params.query)
     return conversation.messages.filter(message => message.content.includes(params.query)).map(message => message.content)
   }, { query: { type: 'string' } }),

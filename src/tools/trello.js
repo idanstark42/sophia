@@ -79,7 +79,7 @@ module.exports = async (_conversation, logger) => [
     return await safely(async () => {
       await logger.debug('Moving task', params)
       const [list] = await listFromName(params.move_to)
-      await put(`/1/cards/${params.cardId}`, { idList: list.id })
+      await put(`/1/cards/${params.cardId}/idList`, { value: list.id })
       await logger.debug('Task moved')
       return 'Task moved'
     }, logger)
@@ -91,8 +91,8 @@ module.exports = async (_conversation, logger) => [
       const boardId = (await get(`/1/cards/${params.cardId}`)).idBoard
       const boardName = (await get(`/1/boards/${boardId}`)).name
 
-      if (params.name) await put(`/1/cards/${params.cardId}`, { name: params.name })
-      if (params.due) await put(`/1/cards/${params.cardId}`, { due: params.due })
+      if (params.name) await put(`/1/cards/${params.cardId}/name`, { value: params.name })
+      if (params.due) await put(`/1/cards/${params.cardId}/due`, { value: params.due })
       if (params.labels) await setLabels(params.cardId, params.labels, boardName)
       await logger.debug('Task updated')
       return 'Task updated'
@@ -113,7 +113,7 @@ module.exports = async (_conversation, logger) => [
       await logger.debug('Setting checklist item status', params)
       const checklist = await get(`/1/cards/${params.cardId}`).checklists.find(checklist => checklist.name === params.checklist)
       const item = checklist.items.find(item => item.name === params.item)
-      await put(`/1/cards/${params.cardId}/checkItem/${item.id}`, { state: params.state })
+      await put(`/1/cards/${params.cardId}/checkItem/${item.id}/state`, { value: params.state })
       await logger.debug('Checklist item status set', params.state)
       return 'Checklist item status set' + params.state
     }, logger)
