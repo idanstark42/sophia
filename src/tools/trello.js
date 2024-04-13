@@ -84,8 +84,8 @@ module.exports = async (_conversation, logger) => [
     return await safely(async () => {
       await logger.debug('Creating task', params)
       const [list, boardName] = await listFromName(params.list)
-      const card = await post('/1/cards', { idList: list.id, name: params.name })
-      if (params.task_labels) await setLabels(card.id, params.labels, boardName)
+      const card = await post('/1/cards', { idList: list.id, name: params.task_name })
+      if (params.task_labels) await setLabels(card.id, params.task_labels, boardName)
       if (params.checklists) {
         for (const checklist of params.checklists) {
           await addChecklist(card.id, checklist)
