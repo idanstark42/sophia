@@ -1,15 +1,36 @@
-const Trello = require('node-trello')
-const promisify = require('util').promisify
-
 const { functionTool, safely } = require('./_utils')
 
+const TRELLO_API_ROOT = 'https://api.trello.com'
 const TRELLO_API_KEY = process.env.TRELLO_API_KEY
 const TRELLO_API_TOKEN = process.env.TRELLO_API_TOKEN
 
-const trello = new Trello(TRELLO_API_KEY, TRELLO_API_TOKEN)
-const get = promisify(trello.get.bind(trello))
-const post = promisify(trello.post.bind(trello))
-const put = promisify(trello.put.bind(trello))
+const url = path => {
+  const containsParams = path.includes('?')
+  return `${TRELLO_API_ROOT}${path}${containsParams ? '&' : '?'}key=${TRELLO_API_KEY}&token=${TRELLO_API_TOKEN}`
+}
+
+const get = async (path) => {
+  const response = await fetch(url(path))
+  return await response.json()
+}
+
+const post = async (path, body) => {
+  const response = await fetch(url(path), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+  return await response.json()
+}
+
+const put = async (path, body) => {
+  const response = await fetch(url(path), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+  return await response.json()
+}
 
 const LISTS = {
   ideas: { boardName: 'Long Term Projects', listName: 'IDEAS' },
