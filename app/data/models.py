@@ -1,20 +1,18 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict
 
-class ToolSchema(BaseModel):
+class Describable(BaseModel):
   name: str
   description: Optional[str]
+
+class ToolSchema(Describable):
   base_url: Optional[str]
-  auth: Optional[dict]
-  actions: List[dict]
+  auth: Optional[Dict]
+  actions: List[Dict]
 
-class ProtocolSchema(BaseModel):
-  name: str
-  description: Optional[str]
+class ProtocolSchema(Describable):
   commands: List[str]
 
-class RoutineSchema(BaseModel):
-  name: str
-  description: Optional[str]
+class RoutineSchema(Describable):
   schedule: str
   protocol_ids: List[str]

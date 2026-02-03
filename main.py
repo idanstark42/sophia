@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.assistant import router as assistant_router
+# from app.api.assistant import router as assistant_router
 from app.api.admin import router as admin_router
-from app.api.tools import router as tools_router
+# from app.api.tools import router as tools_router
 
 app = FastAPI(
   title="Sophia",
@@ -30,8 +30,8 @@ app.add_middleware(
 # Include Routers
 # ------------------------
 app.include_router(admin_router, prefix="/admin", tags=["Admin"])
-app.include_router(assistant_router, prefix="/assistant", tags=["Assistant"])
-app.include_router(tools_router, prefix="/tools", tags=["Tools"])
+# app.include_router(assistant_router, prefix="/assistant", tags=["Assistant"])
+# app.include_router(tools_router, prefix="/tools", tags=["Tools"])
 
 # ------------------------
 # Startup / Shutdown Events

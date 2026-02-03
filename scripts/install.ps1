@@ -1,10 +1,11 @@
-# install.ps1
-# Run as Administrator
+# ========================================
+# Sophia AI Assistant Server Installer
+# ========================================
 
 set-StrictMode -Version Latest
-Write-Host "=== Starting Assistant Server Installer ==="
+Write-Host "=== Starting Sophia Installer ==="
 
-# ----------- Python 3.11+ ----------
+# ---------------- Python ----------------
 $pythonInstalled = $false
 try {
     $pythonVersion = & python --version 2>$null
@@ -28,7 +29,7 @@ if (-not $pythonInstalled) {
     Write-Host "Python 3.11+ already installed: $pythonVersion"
 }
 
-# ----------- Poetry ----------
+# ---------------- Poetry ----------------
 $poetryInstalled = $false
 try {
     $poetryVersion = & poetry --version 2>$null
@@ -45,42 +46,82 @@ if (-not $poetryInstalled) {
 
 Write-Host "Poetry version: $(poetry --version)"
 
-# ----------- Install Python dependencies ----------
+# ---------------- Python dependencies ----------------
 Write-Host "Installing Python dependencies via Poetry..."
 poetry install
 
-# ----------- MongoDB ----------
+# ---------------- MongoDB ----------------
 $mongoService = Get-Service -Name "MongoDB" -ErrorAction SilentlyContinue
+
+# Configurable paths
+$mongoInstallDir = "C:\Program Files\MongoDB\Server\7.0"
+$mongoDataDir    = "C:\data\db"
+$mongoLogDir     = "C:\data\log"
+$mongoLogFile    = Join-Path $mongoLogDir "mongod.log"
+$mongoUrl        = "https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-7.0.1-signed.msi"
+$mongoMsi        = "$env:TEMP\mongodb.msi"
+
 if (-not $mongoService) {
     Write-Host "MongoDB not found. Installing..."
 
-    $mongoUrl = "https://fastdl.mongodb.org/windows/mongodb-windows-x86_64-7.0.1-signed.msi"
-    $mongoMsi = "$env:TEMP\mongodb.msi"
-    Invoke-WebRequest -Uri $mongoUrl -OutFile $mongoMsi
+    # Clean previous temp file
+    if (Test-Path $mongoMsi) { Remove-Item $mongoMsi -Force }
 
-    Start-Process msiexec.exe -Wait -ArgumentList "/i `"$mongoMsi`" INSTALLLOCATION=`"C:\Program Files\MongoDB\Server\7.0`" ADDLOCAL=All /quiet"
+    # Download MSI reliably
+    Write-Host "Downloading MongoDB MSI..."
+    Invoke-WebRequest -Uri $mongoUrl -OutFile $mongoMsi -UseBasicParsing
+
+    # Install MongoDB silently
+    Write-Host "Installing MongoDB..."
+    Start-Process msiexec.exe -Wait -ArgumentList "/i `"$mongoMsi`" INSTALLLOCATION=`"$mongoInstallDir`" ADDLOCAL=All /quiet"
     Remove-Item $mongoMsi
 
-    # Ensure data and log directories exist
-    New-Item -ItemType Directory -Path "C:\data\db" -Force
-    New-Item -ItemType Directory -Path "C:\data\log" -Force
+    # Ensure data/log dirs exist
+    New-Item -ItemType Directory -Path $mongoDataDir -Force
+    New-Item -ItemType Directory -Path $mongoLogDir -Force
 
-    # Install MongoDB as Windows service
-    $mongoBin = "C:\Program Files\MongoDB\Server\7.0\bin\mongod.exe"
-    & $mongoBin --install --dbpath "C:\data\db" --logpath "C:\data\log\mongod.log" --logappend
-    Start-Service MongoDB
+    # Install service with explicit name
+    $mongoBin = Join-Path $mongoInstallDir "bin\mongod.exe"
+    if (Test-Path $mongoBin) {
+        & $mongoBin --install --serviceName "MongoDB" --dbpath $mongoDataDir --logpath $mongoLogFile --logappend
+        Start-Service -Name "MongoDB"
+        Write-Host "MongoDB installed and service started."
+    } else {
+        Write-Host "ERROR: MongoDB binary not found at $mongoBin. Installation may have failed."
+    }
 } else {
     Write-Host "MongoDB service already exists. Status: $($mongoService.Status)"
 }
 
-Write-Host "MongoDB service status: $(Get-Service MongoDB).Status"
+# Show final service status
+$mongoService = Get-Service -Name "MongoDB" -ErrorAction SilentlyContinue
+if ($mongoService) { Write-Host "MongoDB service status: $($mongoService.Status)" }
 
-# ----------- Run python.seed ----------
-if (Test-Path "python.seed") {
-    Write-Host "Running python.seed..."
-    & python seed.py
+# ---------------- Seed.py ----------------
+$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$seedPath = Join-Path $scriptDir "seed.py"
+
+if (Test-Path $seedPath) {
+    Write-Host "Running seed.py inside Poetry environment..."
+    poetry run python $seedPath
 } else {
-    Write-Host "python.seed not found. Skipping..."
+    Write-Host "seed.py not found. Skipping..."
+}
+
+# ---------------- Secrets ----------------
+$envPath = Join-Path $scriptDir "config"
+if (-not (Test-Path $envPath)) { New-Item -ItemType Directory -Path $envPath }
+
+$secretsFile = Join-Path $envPath "secrets.env"
+if (-not (Test-Path $secretsFile)) {
+    $apiKey = -join ((1..64) | ForEach-Object { 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()-_=+'[(Get-Random -Minimum 0 -Maximum 74)] })
+    @"
+# Auto-generated secrets
+ADMIN_API_KEY=$apiKey
+"@ | Out-File -Encoding UTF8 $secretsFile
+    Write-Host "Generated new ADMIN_API_KEY and saved to $secretsFile"
+} else {
+    Write-Host "secrets.env already exists. Skipping API key generation."
 }
 
 Write-Host "=== Installation complete! ==="

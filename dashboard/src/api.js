@@ -1,0 +1,40 @@
+const API_URL = 'http://localhost:5000'
+
+export const setToken = (t) => {
+  sessionStorage.setItem('authToken', t)
+}
+
+const getToken = () => sessionStorage.getItem('authToken')
+
+const getHeaders = () => ({
+  'Content-Type': 'application/json',
+  'Authorization': `Bearer ${getToken()}`
+})
+
+export const login = async (password) => {
+  const res = await fetch(`${API_URL}/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password })
+  })
+  if (!res.ok) throw new Error('Login failed')
+  const data = await res.json()
+  setToken(data.token)
+  return data.token
+}
+
+export const fetchItems = async (type) => {
+  const res = await fetch(`${API_URL}/${type}`, { headers: getHeaders() })
+  if (!res.ok) throw new Error('Failed to fetch items')
+  return await res.json()
+}
+
+export const saveItem = async (type, id, data) => {
+  const res = await fetch(`${API_URL}/${type}/${id}`, {
+    method: 'PUT',
+    headers: getHeaders(),
+    body: JSON.stringify(data)
+  })
+  if (!res.ok) throw new Error('Failed to save item')
+  return await res.json()
+}
