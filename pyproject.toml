@@ -1,0 +1,19 @@
+[project]
+name = "sophia"
+version = "0.1.0"
+description = "An AI assistant server with tool access and independent runs"
+authors = [
+    {name = "Idan Stark",email = "idanstark42@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi (>=0.128.0,<0.129.0)",
+    "pydantic (>=2.12.5,<3.0.0)",
+    "motor (>=3.7.1,<4.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
