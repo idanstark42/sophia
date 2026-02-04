@@ -63,3 +63,14 @@ async def delete(collection_name: str, item_id: str):
   init_db()
   result = await db[collection_name].delete_one({"_id": ObjectId(item_id)})
   return result.deleted_count > 0
+
+async def find(collection_name: str, query: dict, *, limit: int | None = None):
+  init_db()
+  cursor = db[collection_name].find(query)
+  if limit:
+    cursor = cursor.limit(limit)
+
+  results = []
+  async for doc in cursor:
+    results.append(convert_id(doc))
+  return results

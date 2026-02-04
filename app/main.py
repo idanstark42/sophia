@@ -7,9 +7,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.routing import APIRoute
 
 from app.api.static import router as static_router
-# from app.api.assistant import router as assistant_router
+from app.api.assistant import router as assistant_router
 from app.api.admin import router as admin_router
-# from app.api.tools import router as tools_router
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(BASE_DIR, "config", "secrets.env")
@@ -27,7 +26,8 @@ app = FastAPI(
 # ------------------------
 origins = [
   "http://localhost",
-  "http://localhost:5173",  # dev frontend
+  "http://localhost:5173",  # dashboard frontend
+  "http://localhost:3001",  # chat frontend
   "http://localhost:3000",
 ]
 app.add_middleware(
@@ -43,8 +43,7 @@ app.add_middleware(
 # ------------------------
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(admin_router, prefix="/admin", tags=["Admin"])
-# app.include_router(assistant_router, prefix="/assistant", tags=["Assistant"])
-# app.include_router(tools_router, prefix="/tools", tags=["Tools"])
+app.include_router(assistant_router, prefix="/assistant", tags=["Assistant"])
 
 def start():
   """Launched with `poetry run start` at root level"""

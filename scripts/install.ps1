@@ -124,6 +124,57 @@ ADMIN_API_KEY=$apiKey
     Write-Host "secrets.env already exists. Skipping API key generation."
 }
 
+# ---------------- Ollama & LLaMA ----------------
+
+$ollamaExe = "$env:LOCALAPPDATA\Programs\Ollama\ollama.exe"
+$ollamaInstalled = Test-Path $ollamaExe
+
+if (-not $ollamaInstalled) {
+    Write-Host "Ollama not found. Installing..."
+
+    $ollamaUrl = "https://ollama.com/download/OllamaSetup.exe"
+    $ollamaInstaller = "$env:TEMP\OllamaSetup.exe"
+
+    Invoke-WebRequest -Uri $ollamaUrl -OutFile $ollamaInstaller
+    Start-Process -FilePath $ollamaInstaller -ArgumentList "/S" -Wait
+    Remove-Item $ollamaInstaller
+
+    # Re-check install
+    if (-not (Test-Path $ollamaExe)) {
+        Write-Error "Ollama installation failed."
+        exit 1
+    }
+}
+
+Write-Host "Ollama found at $ollamaExe"
+
+# Add Ollama to PATH for current session
+$env:PATH += ";$(Split-Path $ollamaExe)"
+
+# Wait for Ollama daemon to be ready
+Write-Host "Waiting for Ollama service..."
+$maxTries = 10
+for ($i = 0; $i -lt $maxTries; $i++) {
+    try {
+        & $ollamaExe list 2>$null | Out-Null
+        break
+    } catch {
+        Start-Sleep -Seconds 2
+    }
+}
+
+# ---------------- LLaMA Model ----------------
+$llamaModel = "llama2:7b"
+
+$models = & $ollamaExe list 2>$null
+if ($models -notmatch $llamaModel) {
+    Write-Host "Pulling model $llamaModel..."
+    & $ollamaExe pull $llamaModel
+} else {
+    Write-Host "Model $llamaModel already installed."
+}
+
+
 Write-Host "=== Installation complete! ==="
 Write-Host "Activate Poetry environment: 'poetry shell'"
 Write-Host "Run server: 'poetry run uvicorn main:app --reload'"

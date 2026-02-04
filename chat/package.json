@@ -1,18 +1,17 @@
 {
-  "name": "dashboard",
+  "name": "chat",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build --outDir ../static/dashboard --base=/static/ --emptyOutDir",
+    "dev": "vite --port 3001",
+    "build": "vite build --outDir ../static/chat --base=/static/ --emptyOutDir",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
     "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-icons": "^5.5.0"
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

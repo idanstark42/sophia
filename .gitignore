@@ -1,3 +1,6 @@
 /dashboard/node_modules
+/chat/node_modules
 /app/__pycache__
+/app/*/__pycache__
+/app/*/__pycache__/*
 /app/config/secrets.env
