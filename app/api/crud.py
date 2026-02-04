@@ -11,6 +11,7 @@ from app.data.crud import (
 def crud_routes(router, collection: str, schema, name=None, dependencies=None):
   if name == None:
     name = collection
+
   @router.get(f"/{name}", response_model=List[schema], dependencies=dependencies)
   async def list_items():
     return await get_all(collection)

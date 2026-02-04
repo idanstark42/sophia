@@ -43,9 +43,13 @@ async def get_one(collection_name: str, item_id: str):
   return convert_id(doc)
 
 async def create(collection_name: str, data: dict):
+  print('creating')
   init_db()
+  print(collection_name, data)
   result = await db[collection_name].insert_one(data)
+  print(result.inserted_id)
   data["id"] = str(result.inserted_id)
+  print(data)
   return data
 
 async def update(collection_name: str, item_id: str, data: dict):

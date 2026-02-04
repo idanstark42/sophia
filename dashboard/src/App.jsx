@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react'
 import { IoMdSend, IoMdSettings } from "react-icons/io"
 import { GiHamburgerMenu } from "react-icons/gi"
 import { GoCommandPalette } from "react-icons/go"
-import { FaTools } from "react-icons/fa"
+import { FaPlus, FaTools } from "react-icons/fa"
 import { RiCalendarScheduleFill } from "react-icons/ri"
 
-import { login, fetchItems, saveItem } from './api'
+import { login, fetchItems, saveItem, createItem, deleteItem } from './api'
 
 const ICONS = {
   tools: FaTools,
@@ -52,12 +52,23 @@ function App() {
 
   const handleSave = async () => {
     const updated = JSON.parse(editorContent)
-    await saveItem(activeTab, selectedItem._id, updated)
+    await saveItem(activeTab, selectedItem.id, updated)
     loadItems(activeTab)
   }
 
   const handleCancel = async () => {
     setEditorContent(JSON.stringify(selectedItem, null, 2))
+  }
+
+  const handleCreate = async () => {
+    const created = await createItem(activeTab)
+    setSelectedItem(created)
+    setEditorContent(JSON.stringify(created, null, 2))
+  }
+
+  const handleDelete = async () => {
+    await deleteItem(activeTab, selectedItem.id)
+    loadItems(activeTab)
   }
 
   const handlKeydown = async event => {
@@ -98,9 +109,10 @@ function App() {
         ))}
         {items.map(item => (
           <div key={item._id} onClick={()=>{setSelectedItem(item); setEditorContent(JSON.stringify(item, null, 2))}} className={`item ${item === selectedItem ? 'active' : ''}`}>
-            <b>{item.name}</b><br/>{item.description}
+            <b>{item.name}</b>
           </div>
         ))}
+        <div className='item create' onClick={handleCreate}><FaPlus /></div>
       </div>
       <div className='editor' onKeyDown={handlKeydown}>
         <div className='title'>
@@ -109,6 +121,7 @@ function App() {
         </div>
         <textarea value={editorContent} onChange={e=>setEditorContent(e.target.value)} />
         <div className='buttons'>
+          <button onClick={handleDelete}>Delete</button>
           <button onClick={handleSave}>Save</button>
           <button onClick={handleCancel}>Cancel</button>
         </div>

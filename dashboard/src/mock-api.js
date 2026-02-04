@@ -1,3 +1,5 @@
+import emptyItemFactory from './models'
+
 let token = null
 
 let mockData = {
@@ -40,4 +42,17 @@ export const saveItem = async (type, id, data) => {
   const index = mockData[type].findIndex(i => i._id === id)
   if (index >= 0) mockData[type][index] = { ...mockData[type][index], ...data }
   return mockData[type][index]
+}
+
+export const createItem = async (type) => {
+  await new Promise(r => setTimeout(r, 100))
+  if (!token) throw new Error('Unauthorized')
+
+  const newItem = {
+    _id: `${type[0]}${Date.now()}`,
+    ...emptyItemFactory[type]()
+  }
+
+  mockData[type].push(newItem)
+  return newItem
 }

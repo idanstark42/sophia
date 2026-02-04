@@ -14,7 +14,6 @@ from app.api.admin import router as admin_router
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(BASE_DIR, "config", "secrets.env")
 
-print(f"loading env: {env_path}")
 load_dotenv(dotenv_path=env_path)
 
 app = FastAPI(
@@ -28,7 +27,8 @@ app = FastAPI(
 # ------------------------
 origins = [
   "http://localhost",
-  "http://localhost:3000",  # frontend if needed
+  "http://localhost:5173",  # dev frontend
+  "http://localhost:3000",
 ]
 app.add_middleware(
   CORSMiddleware,

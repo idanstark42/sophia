@@ -152,6 +152,16 @@ html, body, #root, .App {
   background: #05142a;
 }
 
+.sidebar .item.create {
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #05142a;
+  border: none;
+  font-size: 2rem;
+}
+
 .editor {
   flex: 1;
   height: 100%;
