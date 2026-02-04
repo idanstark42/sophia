@@ -27,7 +27,7 @@ async def seed_db():
       print(f"Created collection: {col}")
 
   print("Database seeding complete.")
-  await client.close()
+  client.close()
 
 if __name__ == "__main__":
   asyncio.run(seed_db())

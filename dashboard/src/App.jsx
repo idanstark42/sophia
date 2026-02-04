@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { login, fetchItems, saveItem } from './mock-api'
 import { IoMdSend, IoMdSettings } from "react-icons/io"
 import { GiHamburgerMenu } from "react-icons/gi"
 import { GoCommandPalette } from "react-icons/go"
 import { FaTools } from "react-icons/fa"
 import { RiCalendarScheduleFill } from "react-icons/ri"
+
+import { login, fetchItems, saveItem } from './api'
 
 const ICONS = {
   tools: FaTools,

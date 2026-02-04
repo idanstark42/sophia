@@ -1,4 +1,6 @@
-from app.db.crud import (
+from typing import List
+
+from app.data.crud import (
   get_all,
   get_one,
   create,

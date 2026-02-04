@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000'
+const API_URL = 'http://localhost:8000'
 
 export const setToken = (t) => {
   sessionStorage.setItem('authToken', t)
@@ -8,14 +8,13 @@ const getToken = () => sessionStorage.getItem('authToken')
 
 const getHeaders = () => ({
   'Content-Type': 'application/json',
-  'Authorization': `Bearer ${getToken()}`
+  'x-api-key': getToken()
 })
 
 export const login = async (password) => {
-  const res = await fetch(`${API_URL}/login`, {
+  const res = await fetch(`${API_URL}/admin/login?password=${password}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ password })
+    headers: { 'Content-Type': 'application/json' }
   })
   if (!res.ok) throw new Error('Login failed')
   const data = await res.json()
@@ -24,7 +23,7 @@ export const login = async (password) => {
 }
 
 export const fetchItems = async (type) => {
-  const res = await fetch(`${API_URL}/${type}`, { headers: getHeaders() })
+  const res = await fetch(`${API_URL}/admin/${type}`, { headers: getHeaders() })
   if (!res.ok) throw new Error('Failed to fetch items')
   return await res.json()
 }

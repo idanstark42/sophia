@@ -1,2 +1,3 @@
 /dashboard/node_modules
 /app/__pycache__
+/app/config/secrets.env
