@@ -1,108 +1,159 @@
-import { useState, useRef } from "react"
+import { useState, useEffect, useRef } from "react"
+import { IoMdSend } from "react-icons/io"
+import { GiHamburgerMenu } from "react-icons/gi"
+import { FaPlus } from "react-icons/fa"
+
+import {
+  login,
+  fetchConversations,
+  streamMessage
+} from "./api"
 
 const TYPING_SPEED = 30
+const ID_REGEX = /\[CONVERSATION START (.+?)\]/
 
 export default function App() {
+  /* ---------- auth ---------- */
+  const [authToken, setAuthToken] = useState(sessionStorage.getItem("authToken"))
+  const [password, setPassword] = useState("")
+
+  /* ---------- ui ---------- */
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [loading, setLoading] = useState(false)
+
+  /* ---------- conversations ---------- */
+  const [conversations, setConversations] = useState([])
+  const [activeConversation, setActiveConversation] = useState(null)
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [conversationId, setConversationId] = useState(null) // store conversation ID
+
   const controllerRef = useRef(null)
+
+  /* ---------- effects ---------- */
+  useEffect(() => {
+    if (!authToken) return
+    fetchConversations().then(setConversations)
+  }, [authToken])
+
+  /* ---------- handlers ---------- */
+  const handleLogin = async () => {
+    const token = await login(password)
+    setAuthToken(token)
+  }
 
   const sendMessage = async () => {
     if (!input.trim() || loading) return
 
     const userMessage = { role: "user", content: input }
-    setMessages((m) => [...m, userMessage, { role: "assistant", content: "" }])
+    const assistantMessage = { role: "assistant", content: "" }
+
+    if (messages.length > 0 && messages[0].content.includes('[') && !activeConversation) {
+      const activeConversationId = messages[0].content.match(ID_REGEX)[1]
+      setActiveConversation(activeConversationId)
+    }
+
+    setMessages(m => [...m, userMessage, assistantMessage])
     setInput("")
     setLoading(true)
 
     controllerRef.current = new AbortController()
 
-    const body = { prompt: input }
-    if (conversationId) body.conversation_id = conversationId // send existing ID
-
-    const res = await fetch("http://localhost:8000/assistant/conversation/stream", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal: controllerRef.current.signal,
-    })
+    const res = await streamMessage(
+      activeConversation,
+      userMessage.content,
+      controllerRef.current.signal
+    )
 
     const reader = res.body.getReader()
     const decoder = new TextDecoder()
 
-    let firstChunk = true
     while (true) {
       const { value, done } = await reader.read()
       if (done) break
 
       const chunk = decoder.decode(value)
-
-      // If first chunk contains conversation ID, extract it
-      if (firstChunk && !conversationId) {
-        const match = chunk.match(/\[CONVERSATION START (\S+)\]/)
-        if (match) setConversationId(match[1])
-        firstChunk = false
-      }
-
-      // Add letters one by one
-      for (let i = 0; i < chunk.length; i++) {
-        const letter = chunk[i]
-        setMessages((msgs) => {
-          const last = msgs[msgs.length - 1]
-          const updated = { ...last, content: last.content + letter }
-          return [...msgs.slice(0, -1), updated]
+      if (chunk.replace(ID_REGEX, '').trim() === '' && (messages.length === 0 || messages[messages.length - 1].trim() === '')) {
+        setMessages(m => {
+          const last = m[m.length - 1]
+          return [...m.slice(0, -1), { ...last, content: chunk }]
         })
-        await new Promise((r) => setTimeout(r, 1000 / TYPING_SPEED))
+      } else {
+        for (const letter of chunk) {
+          setMessages(m => {
+            const last = m[m.length - 1]
+            return [...m.slice(0, -1), { ...last, content: last.content + letter }]
+          })
+          await new Promise(r => setTimeout(r, 1000 / TYPING_SPEED))
+        }
       }
     }
 
     setLoading(false)
   }
 
-  function cleanContent(content) {
-    return content
-      .replace(/\[CONVERSATION START.+?\]/, "")
-      .replace(/\[CONVERSATION END.+?\]/, "")
-      .replace(/\[[^\]]+?$/, "")
-      .trim()
+  if (!authToken) {
+    return (
+      <div className="auth card">
+        <div>SOPHIA</div>
+        <div>
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+          />
+          <button onClick={handleLogin}>
+            <IoMdSend />
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div style={{ maxWidth: 800, margin: "2rem auto", fontFamily: "sans-serif" }}>
-      <h2>Assistant</h2>
+    <div className="main">
+      <div className={`sidebar ${sidebarOpen ? "open" : ""}`}>
+        <div className="sidebar-button" onClick={() => setSidebarOpen(o => !o)}>
+          <GiHamburgerMenu />
+        </div>
 
-      <div
-        style={{
-          border: "1px solid #ccc",
-          padding: "1rem",
-          height: "60vh",
-          overflowY: "auto",
-          marginBottom: "1rem",
-        }}
-      >
-        {messages.map((m, i) => (
-          <div key={i} style={{ marginBottom: "0.5rem" }}>
-            <strong>{m.role}:</strong>{" "}
-            <pre style={{ display: "inline", whiteSpace: "pre-wrap" }}>
-              {cleanContent(m.content)}
-            </pre>
+        {conversations.map(c => (
+          <div
+            key={c.id}
+            className={`item ${c.id === activeConversation ? "active" : ""}`}
+            onClick={() => {
+              setActiveConversation(c.id)
+              setMessages(c.messages || [])
+            }}
+          >
+            <b>{c.title || "Conversation"}</b>
           </div>
         ))}
+
+        <div className="item create" onClick={() => {}}> {/* TODO */}
+          <FaPlus />
+        </div>
       </div>
 
-      <div style={{ display: "flex", gap: "0.5rem" }}>
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-          style={{ flex: 1 }}
-          placeholder="Type a message..."
-        />
-        <button onClick={sendMessage} disabled={loading}>
-          Send
-        </button>
+      <div className="conversation">
+
+        {messages.map((message, index) => <div className={`message ${message.role}`} key={index}>
+          {(loading && index === messages.length - 1 && message.content.replace(ID_REGEX, '').trim() === '') ? '...' : message.content.replace(ID_REGEX, '')}
+        </div>)}
+
+        {messages.length > 0 ? <div className="gap" /> : ''}
+
+        <div className="input-row">
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && sendMessage()}
+            placeholder="Type a message…"
+          />
+          <button onClick={sendMessage} disabled={loading}>
+            <IoMdSend />
+          </button>
+        </div>
       </div>
     </div>
   )

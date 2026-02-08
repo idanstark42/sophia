@@ -20,12 +20,19 @@ function Icon ({ tab }) {
 }
 
 function App() {
-  const [authToken, setAuthToken] = useState(sessionStorage.getItem('authToken'))
-  const [password, setPassword] = useState('')
+  /* ---------- auth ---------- */
+  const [authToken, setAuthToken] = useState(sessionStorage.getItem("authToken"))
+  const [password, setPassword] = useState("")
+
+  /* ---------- ui ---------- */
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [activeTab, setActiveTab] = useState('tools')
+
+  /* ---------- items ---------- */
   const [items, setItems] = useState([])
   const [selectedItem, setSelectedItem] = useState(null)
+
+  /* ---------- editor ---------- */
   const [editorContent, setEditorContent] = useState('')
 
   useEffect(() => {

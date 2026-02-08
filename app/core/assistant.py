@@ -15,7 +15,6 @@ from app.data import crud
 
 CONVERSATION_COLLECTION = "conversations"
 
-
 class AssistantSession:
   def __init__(self, conversation_id: str | None = None):
     self.conversation_id = conversation_id
