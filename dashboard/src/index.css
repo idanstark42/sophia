@@ -203,3 +203,18 @@ html, body, #root, .App {
   font-weight: bold;
   cursor: pointer;
 }
+
+.editor .item {
+  height: 100%;
+}
+
+.editor .item input, .editor .item textarea {
+  width: calc(100% - 2rem);
+  margin: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  color: #0f2f5d;
+  background: white;
+  outline: none;
+  border: 0;
+}

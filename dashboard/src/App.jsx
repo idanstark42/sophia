@@ -7,15 +7,20 @@ import { RiCalendarScheduleFill } from "react-icons/ri"
 
 import { login, fetchItems, saveItem, createItem, deleteItem } from './api'
 
-const ICONS = {
-  tools: FaTools,
-  protocols: GoCommandPalette,
-  routines: RiCalendarScheduleFill,
-  settings: IoMdSettings
+import Tool from './components/tool'
+import Protocol from './components/protocol'
+import Routine from './components/routine'
+import Setting from './components/settings'
+
+const TYPES = {
+  tools: { icon: FaTools, Component: Tool },
+  protocols: { icon: GoCommandPalette, Component: Protocol },
+  routines: { icon: RiCalendarScheduleFill, Component: Routine },
+  settings: { icon: IoMdSettings, Component: Setting }
 }
 
 function Icon ({ tab }) {
-  const Comp = ICONS[tab]
+  const Comp = TYPES[tab].icon
   return <Comp />
 }
 
@@ -32,8 +37,7 @@ function App() {
   const [items, setItems] = useState([])
   const [selectedItem, setSelectedItem] = useState(null)
 
-  /* ---------- editor ---------- */
-  const [editorContent, setEditorContent] = useState('')
+  const [updatedItem, setUpdatedItem] = useState(null)
 
   useEffect(() => {
     if (authToken) loadItems(activeTab)
@@ -50,7 +54,7 @@ function App() {
       setItems(data)
       if (data.length) {
         setSelectedItem(data[0])
-        setEditorContent(JSON.stringify(data[0], null, 2))
+        setUpdatedItem(structuredClone(data[0]))
       }
     } catch {
       setAuthToken(null)
@@ -58,19 +62,18 @@ function App() {
   }
 
   const handleSave = async () => {
-    const updated = JSON.parse(editorContent)
-    await saveItem(activeTab, selectedItem.id, updated)
+    await saveItem(activeTab, selectedItem.id, updatedItem)
     loadItems(activeTab)
   }
 
   const handleCancel = async () => {
-    setEditorContent(JSON.stringify(selectedItem, null, 2))
+    setUpdatedItem(structuredClone(selectedItem))
   }
 
   const handleCreate = async () => {
     const created = await createItem(activeTab)
     setSelectedItem(created)
-    setEditorContent(JSON.stringify(created, null, 2))
+    setUpdatedItem(structuredClone(created))
   }
 
   const handleDelete = async () => {
@@ -102,6 +105,8 @@ function App() {
     )
   }
 
+  const ActiveComponent = TYPES[activeTab].Component
+
   return (
     <div className='main'>
       <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
@@ -115,7 +120,7 @@ function App() {
           </div>
         ))}
         {items.map(item => (
-          <div key={item._id} onClick={()=>{setSelectedItem(item); setEditorContent(JSON.stringify(item, null, 2))}} className={`item ${item === selectedItem ? 'active' : ''}`}>
+          <div key={item._id} onClick={() => setSelectedItem(item)} className={`item ${item === selectedItem ? 'active' : ''}`}>
             <b>{item.name}</b>
           </div>
         ))}
@@ -126,7 +131,7 @@ function App() {
           <Icon tab={activeTab} />
           {selectedItem?.name}
         </div>
-        <textarea value={editorContent} onChange={e=>setEditorContent(e.target.value)} />
+        <ActiveComponent item={updatedItem} setItem={setUpdatedItem} />
         <div className='buttons'>
           <button onClick={handleDelete}>Delete</button>
           <button onClick={handleSave}>Save</button>
